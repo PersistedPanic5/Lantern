@@ -145,8 +145,10 @@ input.room-title:hover,input.room-title:focus{border-color:var(--line);backgroun
 #roomSession{width:100%;min-height:90px}
 .lbl{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:22px 0 6px}
 button.revealed{border-color:var(--reveal);color:var(--reveal)}
-#selShare{position:fixed;z-index:20;background:var(--reveal);color:#fff;border-color:var(--reveal);box-shadow:0 3px 12px rgba(0,0,0,.25)}
-#selShare[hidden]{display:none}
+#selBar{position:fixed;z-index:20;display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px;box-shadow:0 3px 12px rgba(0,0,0,.25)}
+#selBar[hidden]{display:none}
+#selBar button{padding:3px 9px;font-size:13px}
+#selBar .sb-share{background:var(--reveal);color:#fff;border-color:var(--reveal)}
 .search{width:100%}
 
 /* import dialog */
@@ -234,6 +236,14 @@ input.sec-title{font-family:var(--serif);font-size:24px;flex:1;min-width:240px}
 .map-list .mgroup{flex:1;min-width:100px}
 .map-list button{padding:3px 8px}
 
+.sb{position:absolute;z-index:3;background:color-mix(in srgb,var(--panel) 55%,transparent)}
+.sb-h{left:0;right:14px;bottom:0;height:14px}
+.sb-v{top:0;bottom:14px;right:0;width:14px}
+.sb .thumb{position:absolute;background:color-mix(in srgb,var(--ink) 38%,transparent);border-radius:7px;cursor:default}
+.sb-h .thumb{top:3px;bottom:3px;min-width:24px}
+.sb-v .thumb{left:3px;right:3px;min-height:24px}
+.sb .thumb:hover,.sb .thumb.drag{background:color-mix(in srgb,var(--ink) 58%,transparent)}
+
 /* player screen */
 body.player{display:block;background:#000;cursor:none}
 body.player.cursor{cursor:default}
@@ -271,6 +281,7 @@ body.player #playerWrap{display:block;position:fixed;inset:0}
     <button data-tool="wand" title="Click inside a room to outline it automatically">Pick room<kbd>W</kbd></button>
     <button data-tool="poly" title="Draw a room outline corner by corner">Draw outline<kbd>E</kbd></button>
     <button data-tool="brush" title="Paint fog away or back">Fog brush<kbd>R</kbd></button>
+    <button data-tool="token" title="Place and move characters and enemies">Tokens<kbd>T</kbd></button>
   </div>
   <label class="chk" title="Show the players’ fog as a tint on your map"><input type="checkbox" id="chkFog" checked> Show fog</label>
   <label class="chk" title="Where room labels sit, so the room numbers printed on the map stay readable">Labels <select id="selLabels"><option value="edge">On the corner</option><option value="center">In the middle</option><option value="off">Only when selected</option></select></label>
@@ -291,6 +302,8 @@ body.player #playerWrap{display:block;position:fixed;inset:0}
 <main>
   <div id="stage">
     <canvas id="cv"></canvas>
+    <div class="sb sb-h" id="sbH" hidden><div class="thumb"></div></div>
+    <div class="sb sb-v" id="sbV" hidden><div class="thumb"></div></div>
     <div id="opts"></div>
     <div id="empty" hidden>
       <div>
@@ -305,7 +318,22 @@ body.player #playerWrap{display:block;position:fixed;inset:0}
   </div>
   <aside id="side" aria-label="Rooms and texts"></aside>
 </main>
-<button id="selShare" hidden>Show selection to players</button>
+<div id="selBar" hidden role="toolbar" aria-label="Selected text">
+  <button data-sa="share" class="sb-share">Show to players</button>
+  <button data-sa="split" title="Make the selected words their own paragraph">Split out</button>
+  <button data-sa="merge" title="Join the selected paragraphs into one">Merge paragraphs</button>
+  <button data-sa="move" title="Move the selected words to another text">Move to…</button>
+</div>
+<dialog id="dlgMove">
+  <h2>Move to another text</h2>
+  <p class="muted" id="mvWhat"></p>
+  <label class="lbl" for="mvTarget">Move it to</label>
+  <select id="mvTarget" style="width:100%"></select>
+  <div id="mvNewWrap" class="row"><input type="text" id="mvNewName" placeholder="Name of the new text" style="flex:1"></div>
+  <div class="row"><label class="chk"><input type="radio" name="mvPos" value="end" checked> At the end</label><label class="chk"><input type="radio" name="mvPos" value="start"> At the start</label></div>
+  <p class="muted" style="font-size:13px">A new text is linked to the same rooms as the text it came from.</p>
+  <div class="row end"><button id="mvCancel">Cancel</button><button id="mvGo" class="primary">Move</button></div>
+</dialog>
 
 <dialog id="dlgImport">
   <h2>Import adventure text</h2>
@@ -817,6 +845,21 @@ function playerApp(){
     g.setTransform(s*dpr,0,0,s*dpr,ox*dpr,oy*dpr);
     g.imageSmoothingQuality='high';
     g.drawImage(P.img,0,0,P.w,P.h);
+    for(const tk of P.tokens||[]){
+      g.beginPath(); g.arc(tk.x,tk.y,tk.r,0,Math.PI*2); g.fillStyle=tk.color||'#888'; g.fill();
+      g.lineWidth=Math.max(1.5/s,tk.r*0.12); g.strokeStyle='#fff'; g.stroke();
+      if(tk.name){
+        g.fillStyle='#fff'; g.font=`700 ${tk.r*0.85}px system-ui,sans-serif`; g.textAlign='center'; g.textBaseline='middle';
+        const w0=tk.name.trim().split(/\s+/), ini=(w0.length>1?w0[0][0]+w0[1][0]:w0[0].slice(0,2)).toUpperCase();
+        if(tk.r*s>9) g.fillText(ini,tk.x,tk.y+tk.r*0.04);
+        if(tk.labelPos!=='off'){
+          const fs=15/s; g.font=`600 ${fs}px system-ui,sans-serif`; const w=g.measureText(tk.name).width+fs*0.8, lp=tk.labelPos;
+          const lx=lp==='right'?tk.x+tk.r+fs*0.4+w/2:lp==='left'?tk.x-tk.r-fs*0.4-w/2:tk.x, ly=lp==='above'?tk.y-tk.r-fs:lp==='below'?tk.y+tk.r+fs:tk.y;
+          g.fillStyle='rgba(15,15,18,.8)'; g.beginPath(); g.roundRect?g.roundRect(lx-w/2,ly-fs*0.75,w,fs*1.5,fs*0.75):g.rect(lx-w/2,ly-fs*0.75,w,fs*1.5); g.fill();
+          g.fillStyle='#fff'; g.fillText(tk.name,lx,ly+fs*0.05);
+        }
+      }
+    }
     g.filter=`blur(${Math.round(3*dpr)}px)`;
     g.drawImage(fc,0,0,P.w,P.h);
     g.filter='none';
@@ -840,7 +883,7 @@ function playerApp(){
     const d=e.data; if(!d||typeof d!=='object') return;
     lastMsg=Date.now();
     if(d.t==='map'){
-      P.id=d.id; P.w=d.w; P.h=d.h; P.ops=[]; P.view=null;
+      P.id=d.id; P.w=d.w; P.h=d.h; P.ops=[]; P.view=null; P.tokens=[];
       sizeFog(fc,d.w,d.h); paintFog(fc,[],d.w,d.h);
       loadImg(new Blob([d.buf],{type:d.type})).then(img=>{if(P.id===d.id){P.img=img; draw()}});
     } else if(d.t==='fog'){
@@ -848,6 +891,7 @@ function playerApp(){
     } else if(d.t==='view'){P.view=d.rect; draw()}
     else if(d.t==='black'){P.black=d.on; draw()}
     else if(d.t==='card'){P.card=d.card; drawCard(); draw()}
+    else if(d.t==='tokens'){if(d.id===P.id){P.tokens=d.tokens; draw()}}
     else if(d.t==='clear'){P.id=null; P.img=null; draw()}
   });
   addEventListener('resize',draw);
@@ -899,7 +943,7 @@ function dmApp(){
   const IM=new Map();
   const labelCache=new WeakMap();
   let view={s:1,x:0,y:0};
-  let tool='select', sel=[], hover=null, armed=null, poly=null;
+  let tool='select', sel=[], hover=null, armed=null, poly=null, tokSel=null, tokKind='pc';
   let panel='rooms', textSel=null, editText=null, textFilter='unplaced', textQuery='';
   let shapeMode='new', polyMode='rect';
   const brush={size:80,mode:'reveal',shape:'brush'}, wandOpt={tol:48,gap:3};
@@ -943,10 +987,10 @@ function dmApp(){
   function restore(s){
     S.maps=JSON.parse(s.maps); S.texts=JSON.parse(s.texts);
     if(!curMap()) S.cur=S.maps[0]?.id||null;
-    const m=curMap(); sel=sel.filter(id=>areaById(m,id));
+    const m=curMap(); sel=sel.filter(id=>areaById(m,id)); if(tokSel&&!tokById(m,tokSel)) tokSel=null;
     if(textSel&&!textById(textSel)) textSel=null;
     rebuildFog(); renderMapSel(); renderSide(); save();
-    if(live) sendFog(); else setPending(true);
+    if(live){sendFog(); sendTokens()} else setPending(true);
   }
   function undo(){if(!undoStack.length){toast('Nothing to undo.',1500); return} redoStack.push(snapshot()); restore(undoStack.pop()); toast('Undone.',1200)}
   function redo(){if(!redoStack.length){toast('Nothing to redo.',1500); return} undoStack.push(snapshot()); restore(redoStack.pop()); toast('Redone.',1200)}
@@ -970,8 +1014,45 @@ function dmApp(){
     cv.width=Math.round(cw*dpr); cv.height=Math.round(ch*dpr); dirty=true;
   }
   new ResizeObserver(resize).observe(stage);
-  (function frame(){ if(dirty){dirty=false; draw()} requestAnimationFrame(frame) })();
+  (function frame(){ if(dirty){dirty=false; draw(); updateScrollbars()} requestAnimationFrame(frame) })();
 
+
+  /* ---- scrollbars: show where the view sits on the map; drag a thumb or click the track to move ---- */
+  let sbDrag=null;
+  function sbExtent(m){
+    const vx=-view.x/view.s, vy=-view.y/view.s, vw=cw/view.s, vh=ch/view.s, px=m.w*0.15, py=m.h*0.15;
+    return {vx,vy,vw,vh,x0:Math.min(-px,vx),x1:Math.max(m.w+px,vx+vw),y0:Math.min(-py,vy),y1:Math.max(m.h+py,vy+vh)};
+  }
+  function updateScrollbars(){
+    const m=curMap(), H=$('#sbH'), V=$('#sbV');
+    if(!m){H.hidden=V.hidden=true; return}
+    H.hidden=V.hidden=false;
+    const E=sbDrag?sbDrag.E:sbExtent(m), cur=sbExtent(m);
+    const tw=H.clientWidth, th=V.clientHeight;
+    const ht=H.firstElementChild, vt=V.firstElementChild;
+    ht.style.left=((cur.vx-E.x0)/(E.x1-E.x0)*tw)+'px'; ht.style.width=Math.max(24,cur.vw/(E.x1-E.x0)*tw)+'px';
+    vt.style.top=((cur.vy-E.y0)/(E.y1-E.y0)*th)+'px'; vt.style.height=Math.max(24,cur.vh/(E.y1-E.y0)*th)+'px';
+  }
+  for(const [id,axis] of [['sbH','x'],['sbV','y']]){
+    const bar=$('#'+id), thumb=bar.firstElementChild;
+    thumb.addEventListener('pointerdown',e=>{
+      const m=curMap(); if(!m) return; e.preventDefault(); e.stopPropagation(); thumb.setPointerCapture(e.pointerId); thumb.classList.add('drag');
+      sbDrag={axis,start:axis==='x'?e.clientX:e.clientY,v:axis==='x'?view.x:view.y,E:sbExtent(m)};
+    });
+    thumb.addEventListener('pointermove',e=>{
+      if(!sbDrag||sbDrag.axis!==axis) return;
+      const E=sbDrag.E, len=axis==='x'?bar.clientWidth:bar.clientHeight, span=axis==='x'?E.x1-E.x0:E.y1-E.y0;
+      const d=((axis==='x'?e.clientX:e.clientY)-sbDrag.start)*span/len*view.s;
+      if(axis==='x') view.x=sbDrag.v-d; else view.y=sbDrag.v-d; dirty=true;
+    });
+    const end=()=>{sbDrag=null; thumb.classList.remove('drag'); dirty=true};
+    thumb.addEventListener('pointerup',end); thumb.addEventListener('pointercancel',end);
+    bar.addEventListener('pointerdown',e=>{
+      if(e.target!==bar) return; const m=curMap(); if(!m) return;
+      const E=sbExtent(m), r=thumb.getBoundingClientRect(), before=axis==='x'?e.clientX<r.left:e.clientY<r.top;
+      if(axis==='x') view.x+=(before?1:-1)*cw*0.9; else view.y+=(before?1:-1)*ch*0.9; dirty=true;
+    });
+  }
   function fit(){
     const m=curMap(); if(!m||!cw) return;
     const s=Math.min(cw/m.w,ch/m.h)*0.94;
@@ -1054,12 +1135,77 @@ function dmApp(){
       ctx.fillStyle=rev?'#fff':C.ink; ctx.fillText(label,x,y+.5);
       ctx.globalAlpha=1;
     }
+    drawTokens(m); ctx.setTransform(dpr,0,0,dpr,0,0);
     if(tool==='brush'&&mouse&&brush.shape==='brush'){
       ctx.beginPath(); ctx.arc(mouse.sx,mouse.sy,brush.size*view.s,0,Math.PI*2);
       ctx.setLineDash([5,4]); ctx.lineWidth=1.5; ctx.strokeStyle=brush.mode==='secret'?SECRET_COL:brushRv(mouse.alt)?C.reveal:C.ink; ctx.stroke(); ctx.setLineDash([]);
     }
   }
 
+
+  /* ---- tokens: characters, enemies, NPCs (moved by the DM only) ---- */
+  const TOK_KINDS={pc:{label:'Character',color:'#2f7fd1',showName:true},enemy:{label:'Enemy',color:'#c0392b',showName:false},npc:{label:'NPC',color:'#c9971c',showName:true}};
+  const tokById=(m,id)=>m&&(m.tokens||[]).find(x=>x.id===id);
+  const tokR=(m,tk)=>tk.r||Math.max(6,Math.round(Math.max(m.w,m.h)*0.011));
+  function hitToken(m,p){const ts=m.tokens||[]; for(let i=ts.length-1;i>=0;i--){const tk=ts[i]; if(Math.hypot(p.x-tk.x,p.y-tk.y)<=tokR(m,tk)*1.15) return tk} return null}
+  function initials(n){const w=String(n||'?').trim().split(/\s+/); return (w.length>1?w[0][0]+w[1][0]:w[0].slice(0,2)).toUpperCase()}
+  function addToken(p){
+    const m=curMap(); snap(); m.tokens=m.tokens||[];
+    const K=TOK_KINDS[tokKind], n=m.tokens.filter(x=>x.kind===tokKind).length+1;
+    const tk={id:uid(),name:`${K.label} ${n}`,kind:tokKind,x:r1(p.x),y:r1(p.y),r:null,color:K.color,showName:K.showName,labelPos:'below',visible:true};
+    m.tokens.push(tk); tokSel=tk.id; sel=[]; textSel=null; save(); tokensChanged(); renderSide();
+    setTimeout(()=>{const i=$('#tokName'); if(i){i.focus(); i.select()}},0);
+  }
+  function deleteToken(){
+    const m=curMap(), tk=tokById(m,tokSel); if(!tk) return;
+    snap(); m.tokens=m.tokens.filter(x=>x!==tk); tokSel=null; save(); tokensChanged(); renderSide(); toast(`Removed ${tk.name}. Ctrl+Z brings it back.`,2500);
+  }
+  function duplicateToken(){
+    const m=curMap(), tk=tokById(m,tokSel); if(!tk) return; snap();
+    const mt=tk.name.match(/^(.*?)(\d+)$/), name=mt?mt[1]+(+mt[2]+1):tk.name+' 2', r=tokR(m,tk);
+    const c={...tk,id:uid(),name,x:r1(tk.x+r*2.3),y:tk.y}; m.tokens.push(c); tokSel=c.id; save(); tokensChanged(); renderSide();
+  }
+  const playerTokens=m=>(m.tokens||[]).filter(t=>t.visible!==false).map(t=>({x:t.x,y:t.y,r:tokR(m,t),color:t.color,name:t.showName?t.name:'',labelPos:t.labelPos||'below'}));
+  function sendTokens(){const m=curMap(); if(m) post({t:'tokens',id:m.id,tokens:playerTokens(m)})}
+  let tokT=0;
+  function tokensChanged(soon){dirty=true; if(!live){setPending(true); return} if(!soon){sendTokens(); return} if(!tokT) tokT=setTimeout(()=>{tokT=0; sendTokens()},80)}
+  function drawTokens(m){
+    const ts=m.tokens||[]; if(!ts.length) return;
+    ctx.setTransform(view.s*dpr,0,0,view.s*dpr,view.x*dpr,view.y*dpr);
+    for(const tk of ts){
+      const r=tokR(m,tk);
+      ctx.globalAlpha=tk.visible===false?.45:1;
+      ctx.beginPath(); ctx.arc(tk.x,tk.y,r,0,Math.PI*2); ctx.fillStyle=tk.color||'#888'; ctx.fill();
+      ctx.lineWidth=Math.max(1.5/view.s,r*0.12); ctx.strokeStyle='#fff'; if(tk.visible===false) ctx.setLineDash([r*0.35,r*0.25]); ctx.stroke(); ctx.setLineDash([]);
+      if(tk.id===tokSel){ctx.beginPath(); ctx.arc(tk.x,tk.y,r+Math.max(3/view.s,r*0.18),0,Math.PI*2); ctx.lineWidth=2.5/view.s; ctx.strokeStyle=C.accent; ctx.stroke()}
+      ctx.fillStyle='#fff'; ctx.font=`700 ${r*0.85}px system-ui,sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle';
+      if(r*view.s>9) ctx.fillText(initials(tk.name),tk.x,tk.y+r*0.04);
+      ctx.globalAlpha=1;
+    }
+    ctx.setTransform(dpr,0,0,dpr,0,0); ctx.font='600 12px system-ui,-apple-system,"Segoe UI",sans-serif'; ctx.textBaseline='middle';
+    for(const tk of ts){
+      if((tk.labelPos||'below')==='off') continue;
+      const r=tokR(m,tk)*view.s, x=tk.x*view.s+view.x, y=tk.y*view.s+view.y, w=ctx.measureText(tk.name).width+10;
+      const lp=tk.labelPos||'below', lx=lp==='right'?x+r+4+w/2:lp==='left'?x-r-4-w/2:x, ly=lp==='above'?y-r-12:lp==='below'?y+r+12:y;
+      ctx.globalAlpha=tk.showName?1:.55;
+      ctx.fillStyle='rgba(20,20,24,.78)'; ctx.beginPath(); ctx.roundRect?ctx.roundRect(lx-w/2,ly-9,w,18,9):ctx.rect(lx-w/2,ly-9,w,18); ctx.fill();
+      ctx.fillStyle='#fff'; ctx.textAlign='center'; ctx.fillText(tk.name,lx,ly+.5); ctx.globalAlpha=1;
+    }
+  }
+  function tokenHTML(m,tk){
+    const r=tokR(m,tk), max=Math.max(200,Math.round(r*6));
+    return `<div class="side-top"><button class="link" data-act="back">All rooms</button></div>
+      <input type="text" class="room-title" id="tokName" value="${esc(tk.name)}" placeholder="Name" aria-label="Token name" style="margin-top:10px">
+      <div class="row"><div class="seg" role="group" aria-label="Kind">${Object.entries(TOK_KINDS).map(([k,v])=>`<button data-tkind="${k}" aria-pressed="${tk.kind===k}">${v.label}</button>`).join('')}</div>
+        <label class="chk">Colour <input type="color" id="tokColor" value="${esc(tk.color||'#888888')}"></label></div>
+      <label class="sec-line">Size <input type="range" id="tokSize" min="3" max="${max}" value="${r}" style="flex:1"><span id="tokSizeVal" style="min-width:3.5em;text-align:right">${r} px</span></label>
+      <div class="section-title">On the player screen</div>
+      <label class="chk" style="margin:6px 0"><input type="checkbox" id="tokVisible" ${tk.visible!==false?'checked':''}> Players see this token</label>
+      <label class="chk" style="margin:6px 0"><input type="checkbox" id="tokShowName" ${tk.showName?'checked':''}> Players see its name</label>
+      <label class="sec-line" style="margin-top:8px">Name <select id="tokLabel">${[['below','below the token'],['above','above the token'],['right','to the right'],['left','to the left'],['off','hidden everywhere']].map(([v,l])=>`<option value="${v}" ${(tk.labelPos||'below')===v?'selected':''}>${l}</option>`).join('')}</select></label>
+      <p class="muted" style="font-size:13px">Tokens in fogged areas stay hidden for players, so enemies in unexplored rooms don’t give themselves away.</p>
+      <div class="danger-zone"><button data-act="tokDup" title="Copy with the next number, like Ghoul 2">Duplicate</button><button class="danger" data-act="tokDel" title="Delete">Delete token</button></div>`;
+  }
   /* ---- fog ---- */
   const defaultPad=m=>Math.max(2,Math.round(Math.max(m.w,m.h)*0.006));
   const wallPad=m=>m.pad!=null?m.pad:defaultPad(m);
@@ -1106,7 +1252,7 @@ function dmApp(){
   function sendFog(){const m=curMap(); if(m) post({t:'fog',id:m.id,ops:fogOps(m),secret:m.secret||[]})}
   let fogT=0;
   function sendFogSoon(){ if(fogT) return; fogT=setTimeout(()=>{fogT=0; sendFog()},120) }
-  async function pushAll(){await sendMap(); sendFog(); post({t:'black',on:black}); post({t:'card',card:S.card}); setPending(false)}
+  async function pushAll(){await sendMap(); sendFog(); sendTokens(); post({t:'black',on:black}); post({t:'card',card:S.card}); setPending(false)}
   function setPending(v){pending=v&&!live; $('#btnPush').hidden=live; $('#btnPush').disabled=!pending}
   addEventListener('message',e=>{
     const d=e.data; if(!d||typeof d!=='object') return;
@@ -1142,34 +1288,119 @@ function dmApp(){
     shareCard({title:t.title||t.key||'',ref:blocks.length===1?blocks[0].id:t.id,paras:blocks.map(b=>({head:b.head,text:b.text}))});
   }
   function clearCard(){S.card=null; save(); post({t:'card',card:null}); renderSide()}
-  const selBtn=$('#selShare'); let selPending=null;
+  /* ---- selected text: show, split out, merge, move ---- */
+  const selBar=$('#selBar'); let selPending=null;
+  // Position inside a paragraph's own text (the bold lead-in shown before it doesn't count)
+  function blkPos(blkEl,t,node,off){
+    const te=blkEl.querySelector('.blk-text'); if(!te||!te.contains(node)) return null;
+    const b=t.blocks.find(x=>x.id===blkEl.dataset.b); if(!b) return null;
+    const r=document.createRange(); r.setStart(te,0); r.setEnd(node,off);
+    const pre=b.head?b.head.length+2:0;
+    return Math.max(0,Math.min(b.text.length,r.toString().length-pre));
+  }
   function checkSelection(){
     const s=getSelection();
-    if(!s||s.isCollapsed||!s.rangeCount){selBtn.hidden=true; selPending=null; return}
+    if(!s||s.isCollapsed||!s.rangeCount){selBar.hidden=true; selPending=null; return}
     const r=s.getRangeAt(0), node=r.commonAncestorContainer, el=(node.nodeType===1?node:node.parentElement);
     const sec=el&&el.closest('[data-tsec]'), txt=s.toString().trim();
-    if(!sec||!txt||!$('#side').contains(sec)){selBtn.hidden=true; selPending=null; return}
-    selPending={tid:sec.dataset.tsec,text:txt.replace(/\s*\n\s*/g,'\n')};
+    if(!sec||!txt||!$('#side').contains(sec)||el.closest('.blk-edit')){selBar.hidden=true; selPending=null; return}
+    const t=textById(sec.dataset.tsec);
+    const elOf=n=>(n.nodeType===1?n:n.parentElement).closest('[data-b]');
+    const sb=elOf(r.startContainer), eb=elOf(r.endContainer);
+    let info=null;
+    if(t&&sb&&eb&&sec.contains(sb)&&sec.contains(eb)){
+      const si=t.blocks.findIndex(x=>x.id===sb.dataset.b), ei=t.blocks.findIndex(x=>x.id===eb.dataset.b);
+      const so=blkPos(sb,t,r.startContainer,r.startOffset), eo=blkPos(eb,t,r.endContainer,r.endOffset);
+      if(si>=0&&ei>=0&&so!=null&&eo!=null) info={si,ei,so,eo};
+    }
+    selPending={tid:sec.dataset.tsec,text:txt.replace(/\s*\n\s*/g,'\n'),info};
+    selBar.querySelector('[data-sa=split]').hidden=!info;
+    selBar.querySelector('[data-sa=move]').hidden=!info;
+    selBar.querySelector('[data-sa=merge]').hidden=!(info&&info.ei>info.si);
     const rc=r.getBoundingClientRect();
-    selBtn.hidden=false;
-    selBtn.style.left=Math.max(8,Math.min(innerWidth-240,rc.left))+'px';
-    selBtn.style.top=Math.max(8,rc.top-40)+'px';
+    selBar.hidden=false;
+    selBar.style.left=Math.max(8,Math.min(innerWidth-selBar.offsetWidth-8,rc.left))+'px';
+    selBar.style.top=Math.max(8,rc.top-44)+'px';
   }
-  document.addEventListener('selectionchange',()=>{clearTimeout(checkSelection.t); checkSelection.t=setTimeout(checkSelection,120)});
-  $('#side').addEventListener('scroll',()=>{selBtn.hidden=true});
-  selBtn.addEventListener('mousedown',e=>e.preventDefault());
-  selBtn.onclick=()=>{
-    if(!selPending) return;
-    const t=textById(selPending.tid);
-    shareCard({title:t?(t.title||t.key):'',ref:'sel',paras:selPending.text.split(/\n+/).map(x=>({head:'',text:x}))});
-    getSelection().removeAllRanges(); selBtn.hidden=true;
+  document.addEventListener('selectionchange',()=>{clearTimeout(checkSelection.t); checkSelection.t=setTimeout(checkSelection,150)});
+  $('#side').addEventListener('scroll',()=>{selBar.hidden=true});
+  selBar.addEventListener('mousedown',e=>e.preventDefault());
+  // Cut the selection out so it is made of whole paragraphs; returns those paragraphs.
+  function isolate(t,info){
+    const {si,ei,so,eo}=info, out=[];
+    const nb=(b,text,head)=>({id:newBid(),type:b.type,head:head||'',text});
+    const blocks=t.blocks.slice(si,ei+1), res=[];
+    blocks.forEach((b,i)=>{
+      const s0=i===0?so:0, e0=i===blocks.length-1?eo:b.text.length;
+      const before=b.text.slice(0,s0).trim(), mid=b.text.slice(s0,e0).trim(), after=b.text.slice(e0).trim();
+      if(before){res.push({...b,text:before}); if(mid){const m=nb(b,mid); res.push(m); out.push(m)}}
+      else if(mid){const m={...b,text:mid}; res.push(m); out.push(m)}
+      if(after) res.push(nb(b,after));
+    });
+    t.blocks.splice(si,ei-si+1,...res);
+    return out;
+  }
+  let moveJob=null;
+  function openMove(t,getBlocks,label){
+    moveJob={t,getBlocks};
+    $('#mvWhat').textContent=label;
+    const m=curMap(), grp=t.group||'';
+    const opt=x=>`<option value="${x.id}">${esc((x.key?x.key+' ':'')+(x.title||'Untitled text'))}</option>`;
+    const same=S.texts.filter(x=>x!==t&&(x.group||'')===grp), other=S.texts.filter(x=>x!==t&&(x.group||'')!==grp);
+    $('#mvTarget').innerHTML=`<option value="__new">A new text</option>`+(same.length?`<optgroup label="${esc(grp||'Texts')}">${same.map(opt).join('')}</optgroup>`:'')+(other.length?`<optgroup label="Other sections">${other.map(opt).join('')}</optgroup>`:'');
+    $('#mvNewName').value=`${t.key?t.key+' ':''}DM notes`.trim();
+    $('#mvNewWrap').hidden=false;
+    $('#dlgMove').showModal();
+  }
+  $('#mvTarget').onchange=()=>{$('#mvNewWrap').hidden=$('#mvTarget').value!=='__new'};
+  $('#mvCancel').onclick=()=>{moveJob=null; $('#dlgMove').close()};
+  $('#mvGo').onclick=()=>{
+    if(!moveJob) return; const {t,getBlocks,whole}=moveJob; moveJob=null;
+    snap();
+    const moved=getBlocks(); if(!moved.length){$('#dlgMove').close(); return}
+    t.blocks=t.blocks.filter(b=>!moved.includes(b));
+    let target, v=$('#mvTarget').value, atStart=document.querySelector('[name=mvPos]:checked').value==='start';
+    if(v==='__new'){
+      target={id:uid(),key:'',title:$('#mvNewName').value.trim()||'Notes',blocks:[],group:t.group||''};
+      S.texts.push(target);
+      for(const mm of S.maps){for(const a of mm.areas) if(a.texts.includes(t.id)) a.texts.push(target.id); if((mm.mapTexts||[]).includes(t.id)) mm.mapTexts.push(target.id)}
+    } else target=textById(v);
+    if(atStart) target.blocks.unshift(...moved); else target.blocks.push(...moved);
+    if(whole&&!t.blocks.length){
+      for(const mm of S.maps){
+        for(const a of mm.areas) if(a.texts.includes(t.id)){a.texts=a.texts.filter(x=>x!==t.id); if(!a.texts.includes(target.id)) a.texts.push(target.id)}
+        mm.mapTexts=(mm.mapTexts||[]).filter(x=>x!==t.id);
+      }
+      S.texts=S.texts.filter(x=>x!==t); if(textSel===t.id) textSel=target.id; if(editText===t.id) editText=null;
+    }
+    $('#dlgMove').close(); save(); renderSide();
+    toast(`Moved ${moved.length} paragraph${moved.length===1?'':'s'} to ${(target.key?target.key+' ':'')+(target.title||'the text')}. Ctrl+Z undoes it.`);
   };
+  selBar.onclick=e=>{
+    const b=e.target.closest('[data-sa]'); if(!b||!selPending) return;
+    const t=textById(selPending.tid), info=selPending.info, act=b.dataset.sa;
+    getSelection().removeAllRanges(); selBar.hidden=true;
+    if(act==='share'){shareCard({title:t?(t.title||t.key):'',ref:'sel',paras:selPending.text.split(/\n+/).map(x=>({head:'',text:x}))}); return}
+    if(!t||!info) return;
+    if(act==='split'){snap(); isolate(t,info); save(); renderSide(); toast('Split into its own paragraph. Change its type from the paragraph menu.',3500)}
+    else if(act==='merge'){
+      snap(); const blocks=t.blocks.slice(info.si,info.ei+1), first=blocks[0];
+      first.text=blocks.map((x,i)=>(i&&x.head?x.head+'. ':'')+x.text).join(' ').replace(/\s+/g,' ').trim();
+      t.blocks.splice(info.si,blocks.length,first); save(); renderSide(); toast(`Merged ${blocks.length} paragraphs.`,2500);
+    }
+    else if(act==='move'){let cache=null; openMove(t,()=>cache||(cache=isolate(t,info)),`“${selPending.text.slice(0,90)}${selPending.text.length>90?'…':''}”`)}
+  };
+  // caret in an edited paragraph, for "Split at cursor"
+  let caret=null;
+  const trackCaret=e=>{const ta=e.target; if(ta.dataset&&ta.dataset.field==='btext'){const be=ta.closest('[data-b]'), ts=ta.closest('[data-tsec]'); caret={tid:ts&&ts.dataset.tsec,bid:be&&be.dataset.b,pos:ta.selectionStart}}};
+  ['keyup','click','select','input'].forEach(ev=>$('#side').addEventListener(ev,trackCaret));
 
   /* ---- tools ---- */
+  const cursorFor=()=>spaceDown?'grab':tool==='select'?'default':tool==='token'?'copy':tool==='brush'&&brush.shape==='brush'?'none':'crosshair';
   function setTool(t){
     tool=t; poly=null; hover=null;
     document.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tool===t));
-    cv.style.cursor=t==='select'?'default':t==='brush'&&brush.shape==='brush'?'none':'crosshair';
+    cv.style.cursor=cursorFor();
     renderOpts(); dirty=true;
   }
   const effMode=p=>p&&p.shift?'add':p&&p.alt?'sub':shapeMode;
@@ -1182,7 +1413,9 @@ function dmApp(){
   function renderOpts(){
     const o=$('#opts');
     if(!curMap()){o.innerHTML=''; return}
-    if(tool==='select') o.innerHTML='<span class="hint">Click a room to read it. Shift-click selects several. Right-click reveals or hides a room. Drag to move the map.</span>';
+    if(tool==='token') o.innerHTML=`<div class="seg" role="group" aria-label="New token">${Object.entries(TOK_KINDS).map(([k,v])=>`<button data-tk="${k}" aria-pressed="${tokKind===k}">${v.label}</button>`).join('')}</div>
+      <span class="hint">Click the map to place a ${TOK_KINDS[tokKind].label.toLowerCase()}. Drag tokens to move them. Delete removes the selected one.</span>`;
+    else if(tool==='select') o.innerHTML='<span class="hint">Click a room to read it. Shift-click selects several. Right-click reveals or hides a room. Drag to move the map.</span>';
     else if(tool==='wand') o.innerHTML=`${modeSeg()}
       <label title="How different a color must be to count as a wall">Tolerance <input type="range" id="oTol" min="5" max="160" value="${wandOpt.tol}"></label>
       <label title="Closes doorways so the fill stays in one room">Gap closing <input type="range" id="oGap" min="0" max="12" value="${wandOpt.gap}"></label>
@@ -1202,10 +1435,11 @@ function dmApp(){
   $('#opts').addEventListener('click',e=>{
     const b=e.target.closest('[data-bm]'); if(b){brush.mode=b.dataset.bm; renderOpts(); dirty=true}
     const bs=e.target.closest('[data-bs]'); if(bs){brush.shape=bs.dataset.bs; cv.style.cursor=brush.shape==='rect'?'crosshair':'none'; renderOpts(); dirty=true}
+    const tkb=e.target.closest('[data-tk]'); if(tkb){tokKind=tkb.dataset.tk; renderOpts()}
     const pmb=e.target.closest('[data-pm]'); if(pmb){polyMode=pmb.dataset.pm; poly=null; renderOpts(); dirty=true}
     const s=e.target.closest('[data-sm]'); if(s){shapeMode=s.dataset.sm; renderOpts(); if(shapeMode!=='new'&&sel.length!==1) toast('Select one room first, then add to it or subtract from it.')}
   });
-  document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>setTool(b.dataset.tool));
+  document.querySelectorAll('[data-tool]').forEach(b=>b.onclick=()=>{setTool(b.dataset.tool); b.blur()}); // blur: Space must pan, not press the button
 
   /* ---- raster shape operations (room picker, add, subtract, merge) ---- */
   function getWandData(m){
@@ -1365,6 +1599,10 @@ function dmApp(){
       if(layer==='secret'){m.secret=m.secret||[]; m.secret.push(op)} else m.fog.push(op);
       paintStrokeSeg(op,null,layer); drag={type:'brush',op,layer}; dirty=true; return;
     }
+    if(tool==='select'||tool==='token'){
+      const tk=hitToken(m,p);
+      if(tk){tokSel=tk.id; sel=[]; textSel=null; renderSide(); dirty=true; drag={type:'token',tk,ox:p.x-tk.x,oy:p.y-tk.y,pre:snapshot()}; return}
+    }
     if(tool==='select'&&sel.length===1){
       const a=areaById(m,sel[0]);
       if(a&&ptCount(a)<=150){
@@ -1383,13 +1621,15 @@ function dmApp(){
       if(tool==='select'||tool==='wand'){
         const a=hit(m,p), id=a?a.id:null;
         if(id!==hover){hover=id; dirty=true}
-        if(tool==='select') cv.style.cursor=a?'pointer':'default';
+        if(tool==='select') cv.style.cursor=hitToken(m,p)?'grab':a?'pointer':'default';
       }
+      if(tool==='token') cv.style.cursor=spaceDown?'grab':hitToken(m,p)?'grab':'copy';
       if(tool==='brush'||tool==='poly') dirty=true;
       return;
     }
     if(drag.type==='rect'){drag.b=[p.x,p.y]; drag.shift=p.shift; drag.alt=p.alt; dirty=true; return}
     if(drag.type==='frect'){drag.b=[p.x,p.y]; dirty=true; return}
+    if(drag.type==='token'){drag.tk.x=r1(p.x-drag.ox); drag.tk.y=r1(p.y-drag.oy); drag.moved=true; tokensChanged(true); return}
     if(drag.type==='pan'||drag.type==='maybe'){
       const dx=p.sx-drag.sx, dy=p.sy-drag.sy;
       if(drag.type==='maybe'&&Math.hypot(dx,dy)<4) return;
@@ -1422,6 +1662,7 @@ function dmApp(){
       const x0=r1(Math.min(d.a[0],p.x)), x1=r1(Math.max(d.a[0],p.x)), y0=r1(Math.min(d.a[1],p.y)), y1=r1(Math.max(d.a[1],p.y));
       poly=[[x0,y0],[x1,y0],[x1,y1],[x0,y1]]; finishPoly(p); return;
     }
+    if(d.type==='token'){if(d.moved){undoStack.push(d.pre); redoStack.length=0; save(); tokensChanged()} return}
     if(d.type==='maybe') click(p);
     else if(d.type==='brush'){save(); if(live) sendFog(); else setPending(true)}
     else if(d.type==='vertex'&&d.changed){undoStack.push(d.pre); redoStack.length=0; save(); if(isRevealed(m,d.a.id)) fogChanged()}
@@ -1436,6 +1677,8 @@ function dmApp(){
   });
   function click(p){
     const m=curMap();
+    if(tool==='token'){addToken(p); return}
+    if(tokSel){tokSel=null; renderSide(); dirty=true}
     if(tool==='select'){const a=hit(m,p); if(a) selectArea(a.id,false,p.shift); else if(!p.shift) selectArea(null)}
     else if(tool==='wand'){
       const mode=effMode(p), a=hit(m,p);
@@ -1452,6 +1695,7 @@ function dmApp(){
   }
   cv.addEventListener('wheel',e=>{
     e.preventDefault(); const m=curMap(); if(!m) return;
+    if(e.shiftKey&&!e.ctrlKey){view.x-=(e.deltaY||e.deltaX); dirty=true; return}
     const p=toMap(e), f=Math.exp(-e.deltaY*(e.ctrlKey?0.01:0.0015));
     const min=Math.min(cw/m.w,ch/m.h)*0.2, ns=Math.max(min,Math.min(8,view.s*f));
     view.x=p.sx-p.x*ns; view.y=p.sy-p.y*ns; view.s=ns; dirty=true;
@@ -1460,7 +1704,7 @@ function dmApp(){
   addEventListener('keydown',e=>{
     const tag=e.target.tagName, typing=(tag==='INPUT'&&/^(text|search)$/.test(e.target.type))||tag==='TEXTAREA'||tag==='SELECT';
     if(typing){if(e.key==='Escape') e.target.blur(); return}
-    if($('#dlgImport').open||$('#dlgPdf').open||$('#dlgMaps').open) return;
+    if($('#dlgImport').open||$('#dlgPdf').open||$('#dlgMaps').open||$('#dlgMove').open) return;
     const m=curMap(), k=e.key.toLowerCase();
     if((e.key==='PageUp'||e.key==='PageDown')&&m){const sib=siblings(m); if(sib.length>1){const i=sib.indexOf(m); switchMap(sib[(i+(e.key==='PageDown'?1:-1)+sib.length)%sib.length].id)} e.preventDefault(); return}
     if((e.ctrlKey||e.metaKey)&&k==='z'){e.shiftKey?redo():undo(); e.preventDefault(); return}
@@ -1472,7 +1716,8 @@ function dmApp(){
     else if(k==='r') setTool('brush');
     else if(k==='a') stepRoom(-1);
     else if(k==='s') stepRoom(1);
-    else if(k==='t') toggleReveal(selAreas());
+    else if(k==='t') setTool('token');
+    else if(k==='h') toggleReveal(selAreas());
     else if(k==='m') mergeSelected();
     else if(k==='f') fit();
     else if(k==='c'&&S.card) clearCard();
@@ -1480,16 +1725,21 @@ function dmApp(){
     else if(k===']'){brush.size=Math.min(600,Math.round(brush.size*1.2)); renderOpts(); dirty=true}
     else if(e.key==='Enter'&&poly) finishPoly(mouse);
     else if(e.key==='Backspace'&&poly){poly.pop(); if(!poly.length) poly=null; dirty=true; e.preventDefault()}
+    else if((e.key==='Delete'||e.key==='Backspace')&&tokSel){deleteToken(); e.preventDefault()}
     else if((e.key==='Delete'||e.key==='Backspace')&&sel.length){deleteSelected(); e.preventDefault()}
     else if(e.key==='Escape'){
-      if(poly) poly=null; else if(armed){armed=null; renderSide()} else if(sel.length||textSel){sel=[]; textSel=null; editText=null; renderSide()}
+      if(poly) poly=null; else if(tokSel){tokSel=null; renderSide()} else if(armed){armed=null; renderSide()} else if(sel.length||textSel){sel=[]; textSel=null; editText=null; renderSide()}
       dirty=true;
     }
-    else if(e.key===' '){spaceDown=true; cv.style.cursor='grab'; e.preventDefault()}
+    else if(e.key===' '){spaceDown=true; cv.style.cursor='grab'; e.preventDefault(); if(document.activeElement&&document.activeElement.tagName==='BUTTON') document.activeElement.blur()}
     else return;
-    if(['a','s','q','w','e','r'].includes(k)) e.preventDefault();
+    if(['a','s','q','w','e','r','t','h'].includes(k)) e.preventDefault();
   });
-  addEventListener('keyup',e=>{if(e.key===' '){spaceDown=false; setTool(tool)}});
+  addEventListener('keyup',e=>{
+    if(e.key!==' ') return;
+    const tag=e.target.tagName; if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT') return;
+    spaceDown=false; e.preventDefault(); cv.style.cursor=cursorFor(); // keeps a half-drawn outline
+  });
 
   /* ---- side panel ---- */
   const side=$('#side');
@@ -1501,7 +1751,8 @@ function dmApp(){
     if(!m&&!S.texts.length){
       vkey='welcome';
       html=`<div class="side-top"><h2>Welcome</h2><p class="muted">Lantern keeps your dungeon map and the adventure text on one screen. Load a map, import the text, then link each room to its text. A second window shows your players only what you reveal, including any text you choose to show them.</p></div>`;
-    } else if(m&&sel.length>1){vkey='multi'; html=multiHTML(m)}
+    } else if(m&&tokSel&&tokById(m,tokSel)){vkey='tok:'+tokSel; html=tokenHTML(m,tokById(m,tokSel))}
+    else if(m&&sel.length>1){vkey='multi'; html=multiHTML(m)}
     else if(m&&sel.length===1&&areaById(m,sel[0])){vkey='room:'+sel[0]; html=roomHTML(m,areaById(m,sel[0]))}
     else if(textSel&&textById(textSel)){vkey='text:'+textSel; html=textViewHTML(textById(textSel))}
     else {vkey='list:'+panel; html=`<div class="tabs seg" role="tablist"><button role="tab" data-tab="rooms" aria-pressed="${panel==='rooms'}">Rooms on this map</button><button role="tab" data-tab="texts" aria-pressed="${panel==='texts'}">Texts</button></div>`+(panel==='rooms'?roomsListHTML(m):textsListHTML())}
@@ -1539,13 +1790,15 @@ function dmApp(){
       ${(m.secret||[]).length?`<p class="muted" style="font-size:13px;margin:6px 0">${m.secret.length} “never show” mark${m.secret.length===1?'':'s'} on this map (purple). Edit them with the Fog brush, mode Never show. <button class="link" data-act="clearSecret">Remove all</button></p>`:''}
       ${armedHTML()}
       ${mapTexts.length?`<div class="section-title">Notes for the whole map</div><ul class="list">${mapTexts.map(t=>`<li><button class="row-btn" data-text="${t.id}"><span class="dot on"></span><span class="t" style="color:inherit">${esc(t.title||t.key||'Notes')}</span></button></li>`).join('')}</ul>`:''}
+      ${(m.tokens||[]).length?`<div class="section-title">Tokens: ${m.tokens.length}</div><ul class="list">${m.tokens.map(tk=>`<li><button class="row-btn" data-tok="${tk.id}"><span class="dot" style="background:${esc(tk.color)};border-color:${esc(tk.color)}"></span><span class="t" style="color:inherit">${esc(tk.name)}</span><span class="w">${tk.visible===false?'hidden from players':tk.showName?'name shown':'name hidden'}</span></button></li>`).join('')}</ul>`:''}
       <div class="section-title">Rooms: ${m.areas.length}${unplaced?`<span class="sp"></span><button class="link" data-tab="texts">${unplaced} text${unplaced===1?'':'s'} not placed yet</button>`:''}</div>
       ${rows?`<ul class="list">${rows}</ul>`:`<p class="muted">No rooms yet. Click inside a room with Pick room (W), or import the adventure text first and place each text on the map.</p>`}
       <div class="section-title">Shortcuts</div>
       <div class="keys"><kbd>Q W E R</kbd><span>Select, pick room, draw outline, fog brush</span>
       <kbd>E again</kbd><span>Switch between drawing a rectangle and clicking corners</span>
       <kbd>A S</kbd><span>Previous and next room</span>
-      <kbd>T</kbd><span>Reveal or hide the selected rooms (or right-click)</span>
+      <kbd>H</kbd><span>Reveal or hide the selected rooms (or right-click)</span>
+      <kbd>T</kbd><span>Tokens: click to place a character or enemy, drag to move</span>
       <kbd>Shift</kbd><span>Select several rooms; add to a room while picking or drawing</span>
       <kbd>Alt</kbd><span>Subtract from a room while picking or drawing</span>
       <kbd>M</kbd><span>Merge the selected rooms</span><kbd>Delete</kbd><span>Delete the selected rooms</span>
@@ -1580,7 +1833,7 @@ function dmApp(){
       return t.blocks.map(b=>`<div class="blk-edit" data-b="${b.id}">
         <div class="row" style="margin:0 0 6px"><select data-field="btype" aria-label="Paragraph type">${BLOCK_TYPES.map(([v,l])=>`<option value="${v}" ${b.type===v?'selected':''}>${l}</option>`).join('')}</select>
         <input type="text" class="lead-in" data-field="bhead" value="${esc(b.head)}" placeholder="Bold lead-in, like Treasure (optional)">
-        <button class="link" data-act="bup" title="Move up">Up</button><button class="link" data-act="bdel">Remove</button></div>
+        <button class="link" data-act="bup" title="Move up">Up</button><button class="link" data-act="bsplit" title="Split this paragraph where the cursor is">Split at cursor</button><button class="link" data-act="bmerge" title="Join with the paragraph below">Merge with next</button><button class="link" data-act="bmove" title="Move this paragraph to another text">Move…</button><button class="link" data-act="bdel">Remove</button></div>
         <textarea data-field="btext" aria-label="Paragraph text">${esc(b.text)}</textarea></div>`).join('')
         +`<div class="row"><button data-act="badd">Add paragraph</button><button class="primary" data-act="doneEdit">Done</button></div>`;
     }
@@ -1609,7 +1862,7 @@ function dmApp(){
       <input type="text" class="room-title" id="roomName" value="${esc(a.name)}" placeholder="${esc(texts.find(t=>t.title)?.title||'Room name')}" aria-label="Room name">
       <div class="row">
         <div class="seg" role="group" aria-label="Room status">${STATUS.map(([v,l])=>`<button data-status="${v}" aria-pressed="${(a.status||'new')===v}">${l}</button>`).join('')}</div>
-        <button data-act="reveal" class="${rev?'revealed':''}" title="T">${rev?'Hide from players':'Reveal to players'}</button>
+        <button data-act="reveal" class="${rev?'revealed':''}" title="H">${rev?'Hide from players':'Reveal to players'}</button>
       </div>
       ${texts.map(t=>textSectionHTML(t,true)).join('')||`<p class="muted" style="margin-top:18px">No text linked to this room yet.</p>`}
       <div class="row" style="margin-top:18px"><input type="text" id="linkInput" list="textList" placeholder="Link a text: type its key or name" style="flex:1" autocomplete="off"><datalist id="textList">${opts}</datalist></div>
@@ -1622,7 +1875,7 @@ function dmApp(){
     return `<div class="side-top"><button class="link" data-act="back">All rooms</button></div>
       <h2 style="margin-top:12px">${areas.length} rooms selected</h2>
       <div class="chips">${areas.map(a=>`<span class="chip">${esc(a.key||'?')} <button data-unsel="${a.id}" aria-label="Remove from selection">×</button></span>`).join('')}</div>
-      <div class="row"><button class="primary" data-act="merge" title="M">Merge into one room</button><button data-act="reveal" title="T">Reveal or hide</button><button class="danger" data-act="delArea" title="Delete">Delete</button></div>
+      <div class="row"><button class="primary" data-act="merge" title="M">Merge into one room</button><button data-act="reveal" title="H">Reveal or hide</button><button class="danger" data-act="delArea" title="Delete">Delete</button></div>
       <p class="muted">Merging keeps the first key, combines the outlines and links every text to the merged room.</p>`;
   }
   function textViewHTML(t){
@@ -1635,14 +1888,16 @@ function dmApp(){
       <div class="chips">${pl.map(x=>`<span class="chip"><button class="go link" data-goto="${x.m.id}:${x.a?x.a.id:''}">${esc(x.a?(x.m.id===S.cur?'Room '+(x.a.key||'?'):`${x.m.name}: ${x.a.key||'?'}`):`${x.m.name} (whole map)`)}</button><button data-unlinkfrom="${x.m.id}:${x.a?x.a.id:''}" aria-label="Unlink">×</button></span>`).join('')||'<span class="muted">Nothing yet.</span>'}</div>
       <div class="row">${m?`<button class="primary" data-act="place">Place on map</button><button data-act="toggleMapText">${onMap?'Detach from this map':'Attach to the whole map'}</button>`:''}</div>
       <div data-tsec="${t.id}">${textSectionHTML(t,false).replace(/^<section class="text-sec"/,'<section class="text-sec" style="border-top:none;margin-top:4px"')}</div>
-      <div class="danger-zone"><button class="danger" data-act="delText">Delete this text</button></div>`;
+      <div class="danger-zone" data-tsec="${t.id}"><button data-act="mergeText" title="Move all of this text into another text">Merge into another text…</button><button class="danger" data-act="delText">Delete this text</button></div>`;
   }
   function refreshTextRows(){const el=$('#textRows'); if(el) el.innerHTML=textRowsHTML()}
 
   side.addEventListener('click',e=>{
     const m=curMap();
-    const b=e.target.closest('[data-act],[data-area],[data-text],[data-status],[data-tab],[data-tf],[data-goto],[data-unlinkfrom],[data-unsel],[data-floor]'); if(!b) return;
+    const b=e.target.closest('[data-act],[data-area],[data-text],[data-status],[data-tab],[data-tf],[data-goto],[data-unlinkfrom],[data-unsel],[data-floor],[data-tkind],[data-tok]'); if(!b) return;
     if(b.dataset.floor){if(b.dataset.floor!==S.cur) switchMap(b.dataset.floor); return}
+    if(b.dataset.tkind){const tk=tokById(m,tokSel); if(tk){snap(); const was=TOK_KINDS[tk.kind]; if(!tk.color||tk.color===was.color) tk.color=TOK_KINDS[b.dataset.tkind].color; tk.kind=b.dataset.tkind; save(); tokensChanged(); renderSide()} return}
+    if(b.dataset.tok){tokSel=b.dataset.tok; sel=[]; textSel=null; const tk=tokById(m,tokSel); if(tk&&(tk.x*view.s+view.x<40||tk.x*view.s+view.x>cw-40||tk.y*view.s+view.y<40||tk.y*view.s+view.y>ch-40)){view.x=cw/2-tk.x*view.s; view.y=ch/2-tk.y*view.s} renderSide(); dirty=true; return}
     if(b.dataset.tab){panel=b.dataset.tab; sel=[]; textSel=null; renderSide(); dirty=true; return}
     if(b.dataset.tf){textFilter=b.dataset.tf; renderSide(); return}
     if(b.dataset.area){selectArea(b.dataset.area,true); return}
@@ -1664,7 +1919,9 @@ function dmApp(){
     const tsec=b.closest('[data-tsec]'), t=tsec?textById(tsec.dataset.tsec):null;
     const blkEl=b.closest('[data-b]'), blk=t&&blkEl?t.blocks.find(x=>x.id===blkEl.dataset.b):null;
     switch(b.dataset.act){
-      case 'back': sel=[]; textSel=null; editText=null; panel='rooms'; renderSide(); dirty=true; break;
+      case 'tokDel': deleteToken(); break;
+      case 'tokDup': duplicateToken(); break;
+      case 'back': tokSel=null; sel=[]; textSel=null; editText=null; panel='rooms'; renderSide(); dirty=true; break;
       case 'backTexts': textSel=null; editText=null; panel='texts'; renderSide(); break;
       case 'disarm': armed=null; renderSide(); break;
       case 'clearCard': clearCard(); break;
@@ -1686,6 +1943,16 @@ function dmApp(){
       case 'unlink': if(a&&t){snap(); a.texts=a.texts.filter(x=>x!==t.id); save(); renderSide(); dirty=true} break;
       case 'badd': if(t){snap(); t.blocks.push({id:newBid(),type:'desc',head:'',text:''}); save(); renderSide(); const ta=side.querySelectorAll(`[data-tsec="${t.id}"] textarea[data-field="btext"]`); ta[ta.length-1]?.focus()} break;
       case 'bdel': if(t&&blk){snap(); t.blocks=t.blocks.filter(x=>x!==blk); save(); renderSide()} break;
+      case 'bsplit': if(t&&blk){
+        const pos=caret&&caret.bid===blk.id?caret.pos:null;
+        if(pos==null||pos<=0||pos>=blk.text.length){toast('Click in the paragraph text where it should split, then press Split at cursor.'); break}
+        snap(); const after=blk.text.slice(pos).trim(); blk.text=blk.text.slice(0,pos).trim();
+        t.blocks.splice(t.blocks.indexOf(blk)+1,0,{id:newBid(),type:blk.type,head:'',text:after}); caret=null; save(); renderSide();
+      } break;
+      case 'bmerge': if(t&&blk){const i=t.blocks.indexOf(blk), nx=t.blocks[i+1]; if(!nx){toast('There is no paragraph below to merge with.'); break}
+        snap(); blk.text=(blk.text+' '+(nx.head?nx.head+'. ':'')+nx.text).trim(); t.blocks.splice(i+1,1); save(); renderSide()} break;
+      case 'bmove': if(t&&blk) openMove(t,()=>[blk],`The paragraph “${blk.text.slice(0,80)}${blk.text.length>80?'…':''}”`); break;
+      case 'mergeText': if(t){openMove(t,()=>t.blocks.slice(),'All paragraphs of this text. The empty text is deleted afterwards and its room links move along.'); moveJob.whole=true} break;
       case 'bup': if(t&&blk){const i=t.blocks.indexOf(blk); if(i>0){snap(); t.blocks.splice(i,1); t.blocks.splice(i-1,0,blk); save(); renderSide()}} break;
       case 'newText': {snap(); const nt={id:uid(),key:'',title:'',blocks:[{id:newBid(),type:'desc',head:'',text:''}]}; S.texts.push(nt); textSel=nt.id; editText=nt.id; save(); renderSide(); setTimeout(()=>$('#textKey')?.focus(),0)} break;
       case 'place': if(textSel){armed=textSel; setTool('wand'); textSel=null; panel='texts'; renderSide(); toast('Click inside the room for this text, or drag around it with Draw outline (E).')} break;
@@ -1696,6 +1963,10 @@ function dmApp(){
   side.addEventListener('input',e=>{
     const m=curMap(), tg=e.target;
     if(tg.id==='mapName'&&m){m.name=tg.value; save(); renderMapSel(); return}
+    const tk=m&&tokById(m,tokSel);
+    if(tk&&tg.id==='tokName'){tk.name=tg.value; save(); tokensChanged(true); return}
+    if(tk&&tg.id==='tokColor'){tk.color=tg.value; save(); tokensChanged(true); return}
+    if(tk&&tg.id==='tokSize'){tk.r=+tg.value; $('#tokSizeVal').textContent=tg.value+' px'; save(); tokensChanged(true); return}
     if(tg.id==='mapPad'&&m){if(!side._padSnap){snap(); side._padSnap=true} m.pad=+tg.value; $('#padVal').textContent=m.pad+' px'; rebuildFog(); save(); if(live) sendFogSoon(); else setPending(true); return}
     if(tg.id==='mapGroup'&&m){m.group=tg.value.trim(); save(); renderMapSel(); clearTimeout(side._gt); side._gt=setTimeout(()=>{const f=document.activeElement===tg; renderSide(); if(f){const n=$('#mapGroup'); n.focus(); n.setSelectionRange(n.value.length,n.value.length)}},700); return}
     if(tg.id==='textSearch'){textQuery=tg.value; refreshTextRows(); return}
@@ -1717,6 +1988,10 @@ function dmApp(){
       save(); renderSide(); dirty=true; return;
     }
     if(tg.id==='mapPad'){side._padSnap=false; renderSide(); return}
+    const tk2=m&&tokById(m,tokSel);
+    if(tk2&&tg.id==='tokVisible'){snap(); tk2.visible=tg.checked; save(); tokensChanged(); return}
+    if(tk2&&tg.id==='tokShowName'){snap(); tk2.showName=tg.checked; save(); tokensChanged(); return}
+    if(tk2&&tg.id==='tokLabel'){snap(); tk2.labelPos=tg.value; save(); tokensChanged(); return}
     if(tg.id==='textKey'&&textSel){const t=textById(textSel); snap(); t.key=tg.value.trim(); save(); return}
     if(tg.id==='linkInput'&&a){
       const v=tg.value.trim(); const t=S.texts.find(x=>((x.key?x.key+' ':'')+x.title)===v)||S.texts.find(x=>x.key&&x.key.toLowerCase()===v.toLowerCase());
@@ -1743,7 +2018,7 @@ function dmApp(){
   $('#mapSel').onchange=e=>switchMap(e.target.value);
   function updateEmpty(){$('#empty').hidden=!!curMap(); renderOpts()}
   function switchMap(id){
-    S.cur=id; sel=[]; poly=null; editText=null; wandCache=null;
+    S.cur=id; sel=[]; tokSel=null; poly=null; editText=null; wandCache=null;
     rebuildFog(); fit(); renderMapSel(); renderSide(); updateEmpty(); save();
     if(live) pushAll(); else setPending(true);
   }
@@ -2427,6 +2702,7 @@ function dmApp(){
     }
     for(const m of st.maps){m.mapTexts=m.mapTexts||[]; for(const a of m.areas){a.texts=a.texts||[]; a.rings=a.rings||[a.points||[]]}}
     st.card=st.card||null;
+    for(const m of st.maps) m.tokens=m.tokens||[];
     return st;
   }
 
