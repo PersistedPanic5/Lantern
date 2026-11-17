@@ -17,6 +17,9 @@ opened Lantern (IndexedDB). Nothing is uploaded anywhere.
 
 Download both files into one folder and open `index.html` in Chrome or Edge.
 
+## Use it online
+The app is published via github pages here: https://persistedpanic5.github.io/Lantern/
+
 ## Sharing a campaign
 
 Use **Export** to download one `.json` file with all maps (images included), texts, rooms
