@@ -249,8 +249,19 @@ input.sec-title{font-family:var(--serif);font-size:24px;flex:1;min-width:240px}
 .pvw-bar{display:flex;align-items:center;gap:5px;padding:4px 6px 4px 10px;cursor:move;font-size:13px;font-weight:600;border-bottom:1px solid var(--line);user-select:none;touch-action:none}
 .pvw-bar .sp{flex:1}
 .pvw-bar button{padding:2px 8px;font-size:12.5px;font-weight:400}
-#pvSettings{padding:8px 10px;border-bottom:1px solid var(--line);font-size:13px;max-height:55%;overflow:auto}
-#pvSettings .seg button{font-size:12.5px;padding:3px 8px}
+#scrWin{position:fixed;z-index:16;right:440px;top:110px;width:400px;height:560px;min-width:280px;min-height:200px;resize:both;overflow:hidden;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+#scrWin[hidden]{display:none}
+#scrBody{overflow:auto;padding:4px 14px 16px;font-size:13.5px}
+#scrBody h3{font-family:var(--serif);font-weight:500;font-size:18px;margin:16px 0 6px}
+#scrBody .seg button{font-size:12.5px;padding:3px 8px}
+#scrBody .sec-line{margin:8px 0;flex-wrap:wrap}
+#frameCtl{position:absolute;left:12px;bottom:26px;z-index:4;display:grid;grid-template-columns:repeat(3,32px) auto;grid-template-rows:repeat(3,30px);gap:3px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px;box-shadow:0 3px 14px rgba(0,0,0,.25)}
+#frameCtl[hidden]{display:none}
+#frameCtl button{padding:0;height:30px}
+#frameCtl .fr-side{grid-column:4;grid-row:1/4;display:flex;flex-direction:column;gap:4px;padding-left:8px;font-size:12.5px}
+#frameCtl .fr-side button{height:auto;padding:3px 8px}
+#frInfo{color:var(--muted);font-size:12px;max-width:150px}
+#btnFrame[aria-pressed="true"],#btnScreen[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 #pvHost{flex:1;min-height:0;display:grid;place-items:center;background:#000}
 #btnShare.on{border-color:var(--reveal);color:var(--reveal)}
 dialog.git{width:min(760px,95vw)}
@@ -266,6 +277,26 @@ dialog.git{width:min(760px,95vw)}
 .git-status{min-height:1.4em;color:var(--muted)}
 @media (max-width:700px){.git-targets{grid-template-columns:1fr}}
 
+.tabs5{display:grid;grid-template-columns:repeat(5,1fr)}
+.tabs5 button{padding:5px 2px;font-size:13px}
+.tab-n{font-size:11px;opacity:.7}
+.list-head{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--muted);padding:6px 8px 2px;border-bottom:1px solid var(--line)}
+.list-head span:first-child{flex:1}
+.lh-c{width:58px;text-align:center}
+.list .item{display:flex;align-items:center;gap:6px}
+.list .item .row-btn{flex:1;min-width:0}
+.tick{width:58px;display:flex;justify-content:center;align-items:center;cursor:pointer;flex:none}
+.tick.tick-l{width:auto;justify-content:flex-start;gap:8px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+/* one tick design for every on/off choice */
+#side input[type=checkbox],#opts input[type=checkbox],#scrBody input[type=checkbox]{appearance:none;-webkit-appearance:none;width:20px;height:20px;margin:0;border:2px solid var(--muted);border-radius:5px;background:var(--raised);display:inline-grid;place-items:center;cursor:pointer;flex:none}
+#side input[type=checkbox]:checked,#opts input[type=checkbox]:checked,#scrBody input[type=checkbox]:checked{background:var(--reveal);border-color:var(--reveal)}
+#side input[type=checkbox]:checked::after,#opts input[type=checkbox]:checked::after,#scrBody input[type=checkbox]:checked::after{content:"";width:5px;height:10px;border:solid #fff;border-width:0 2.5px 2.5px 0;transform:translateY(-1px) rotate(45deg)}
+#helpWin{position:fixed;z-index:16;left:24px;top:120px;width:360px;height:420px;min-width:240px;min-height:160px;resize:both;overflow:hidden;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+#helpWin[hidden]{display:none}
+#helpBody{overflow:auto;padding:6px 12px 12px}
+#btnHelp[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+
 /* player screen */
 body.player{display:block;background:#000;cursor:none}
 body.player.cursor{cursor:default}
@@ -273,6 +304,9 @@ body.player > :not(#playerWrap){display:none !important}
 #playerWrap{display:none}
 body.player #playerWrap{display:block;position:fixed;inset:0}
 #pvRoot{position:fixed;inset:0}
+.pv-inner{position:absolute;left:50%;top:50%;transform-origin:50% 50%}
+#pfull{position:fixed;right:18px;bottom:18px;z-index:6;font:600 16px system-ui,sans-serif;padding:10px 16px;border-radius:10px;background:rgba(30,30,30,.85);color:#fff;border:1px solid rgba(255,255,255,.3);cursor:pointer}
+#pfull[hidden]{display:none}
 #phint{position:fixed;left:50%;top:24px;transform:translateX(-50%);color:#ccc;background:rgba(30,30,30,.8);padding:8px 14px;border-radius:8px;font-family:var(--sans);transition:opacity 1s;z-index:5}
 .pview{position:relative;overflow:hidden;background:#000}
 .pv-cv{position:absolute;inset:0;width:100%;height:100%;display:block}
@@ -280,6 +314,7 @@ body.player #playerWrap{display:block;position:fixed;inset:0}
 .pv-card{position:absolute;box-sizing:border-box;overflow:hidden;background:rgba(17,15,11,.9);color:#efe7d2;border:1px solid rgba(225,190,120,.35);border-radius:10px;font-family:var(--serif);line-height:1.5;box-shadow:0 10px 40px rgba(0,0,0,.6)}
 .pv-card[hidden]{display:none}
 .pv-card.side{border-radius:0;border-width:0 0 0 1px;box-shadow:none;background:#12100c}
+.pv-card.side.over{background:rgba(18,16,12,.82)}
 .pv-card.full{border:none;border-radius:0;box-shadow:none;background:#0e0d0a}
 .pv-head{display:flex;gap:.55em;align-items:center;margin-bottom:.55em}
 .pv-head[hidden]{display:none}
@@ -327,10 +362,14 @@ body.player #playerWrap{display:block;position:fixed;inset:0}
     <button id="btnBlack" aria-pressed="false" title="Black out the player screen">Blackout</button>
     <button id="btnView" title="Players see what you see right now">Send my view</button>
     <button id="btnFit" title="Players see the whole map">Whole map</button>
+    <button id="btnFrame" aria-pressed="false" title="A frame on your map in the exact shape of the player screen; players follow it live">Screen frame</button>
+    <button id="btnTableZoom" title="Zoom your view to what players see at table scale (Z)">Table zoom</button>
     <button id="btnPreview" aria-pressed="false" title="Small preview of the player screen (P)">Preview</button>
+    <button id="btnScreen" aria-pressed="false" title="Player screen size, rotation, miniature scale and text layout">Screen setup</button>
     <button id="btnShare" title="Let friends on other computers watch the player screen">Share online</button>
   </div>
   <div class="group">
+ <button id="btnHelp" aria-pressed="false" title="Show the keyboard shortcuts (?)">Shortcuts</button>
     <button id="btnGit" title="Save and open campaigns in a GitHub repository, to work on several devices">GitHub</button>
     <button id="btnExport" title="Download the whole campaign as one file">Export</button>
     <button id="btnOpenCamp" title="Load a campaign file exported from Lantern">Open campaign</button>
@@ -352,6 +391,12 @@ body.player #playerWrap{display:block;position:fixed;inset:0}
     </div>
     <div id="drop">Drop a map image or a PDF</div>
     <div id="toast" role="status" aria-live="polite"></div>
+    <div id="frameCtl" hidden role="group" aria-label="Move the screen frame">
+      <span></span><button data-fr="u" aria-label="Move up">↑</button><span></span>
+      <button data-fr="l" aria-label="Move left">←</button><button data-fr="here" title="Move the frame to the middle of my view">⌖</button><button data-fr="r" aria-label="Move right">→</button>
+      <span></span><button data-fr="d" aria-label="Move down">↓</button><span></span>
+      <div class="fr-side"><div class="row" style="margin:0;gap:4px"><button id="frMinus" data-fr="minus" title="Bigger area (zoom out)">−</button><button id="frPlus" data-fr="plus" title="Smaller area (zoom in)">+</button></div><button data-fr="zoom">Table zoom</button><span id="frInfo"></span></div>
+    </div>
   </div>
   <aside id="side" aria-label="Rooms and texts"></aside>
 </main>
@@ -410,10 +455,37 @@ body.player #playerWrap{display:block;position:fixed;inset:0}
     <div class="crop-side"><h3 id="cropTitle"></h3><p class="muted">Drag a box around each floor or part. Each box becomes its own map in this section, and all of them share the section’s texts.</p>
       <ol id="cropList"></ol><div class="row"><button id="cropClear">Remove all boxes</button><button id="cropDone" class="primary">Done</button></div></div></div>
 </div></dialog>
+<div id="helpWin" hidden role="dialog" aria-label="Shortcuts">
+  <div id="helpBar" class="pvw-bar"><span>Shortcuts</span><span class="sp"></span><button id="helpClose" aria-label="Close shortcuts">×</button></div>
+  <div id="helpBody"><div class="keys"><kbd>Q W E R</kbd><span>Select, pick room, draw outline, fog brush</span>
+    <kbd>T Y</kbd><span>Tokens, covers</span>
+    <kbd>E again</kbd><span>Draw a rectangle or click corners</span>
+    <kbd>A S</kbd><span>Previous and next room</span>
+    <kbd>H</kbd><span>Reveal or hide the selected rooms (or right-click)</span>
+    <kbd>Shift</kbd><span>Select several rooms; add to a room while picking or drawing</span>
+    <kbd>Alt</kbd><span>Subtract from a room while picking or drawing</span>
+    <kbd>M</kbd><span>Merge the selected rooms</span>
+    <kbd>Delete</kbd><span>Delete the selected room, token or cover</span>
+    <kbd>P</kbd><span>Preview of the player screen</span>
+    <kbd>Z</kbd><span>Table zoom: show me what players see at table scale</span>
+    <kbd>Arrows</kbd><span>Move the screen frame (Shift: 5 steps); + and − resize it</span>
+    <kbd>C</kbd><span>Remove the text from the player screen</span>
+    <kbd>Page Up / Down</kbd><span>Previous and next floor in the section</span>
+    <kbd>Space + drag</kbd><span>Move the map (also two fingers on a tablet)</span>
+    <kbd>Wheel</kbd><span>Zoom; Shift + wheel scrolls sideways; F fits the map</span>
+    <kbd>[ ]</kbd><span>Brush size</span>
+    <kbd>Ctrl+Z</kbd><span>Undo; Ctrl+Shift+Z redoes</span>
+    <kbd>Esc</kbd><span>Cancel, deselect</span>
+    <kbd>?</kbd><span>Show or hide this window</span></div>
+    <p class="muted" style="font-size:12.5px;margin-top:10px">Fog brush in mode Never show paints purple marks players never see. Right-click a room to reveal or hide it.</p></div>
+</div>
+<div id="scrWin" hidden role="dialog" aria-label="Screen setup">
+  <div id="scrBar" class="pvw-bar"><span>Screen setup</span><span class="sp"></span><button id="scrClose" aria-label="Close screen setup">×</button></div>
+  <div id="scrBody"></div>
+</div>
 <div id="pvWin" hidden>
   <div id="pvBar" class="pvw-bar"><span>Player screen</span><span class="sp"></span>
-    <button id="pvSettingsBtn" title="Size and placement of shown text">Text layout</button><button id="pvShareBtn" title="Share online">Share</button><button id="pvClose" aria-label="Close the preview">×</button></div>
-  <div id="pvSettings" hidden></div>
+    <button id="pvSettingsBtn" title="Screen size, rotation, scale and text layout">Setup</button><button id="pvShareBtn" title="Share online">Share</button><button id="pvClose" aria-label="Close the preview">×</button></div>
   <div id="pvHost"><div id="pvRoot2"></div></div>
 </div>
 <dialog id="dlgShare"><h2>Share the player screen online</h2><div id="shareBody"></div><div class="row end"><button id="shareClose">Close</button></div></dialog>
@@ -428,11 +500,12 @@ body.player #playerWrap{display:block;position:fixed;inset:0}
 <input type="file" id="filePdf" accept="application/pdf,.pdf" hidden>
 <input type="file" id="fileMap" accept="image/*,application/pdf" hidden>
 <input type="file" id="fileReplace" accept="image/*" hidden>
-<input type="file" id="fileCamp" accept=".json,application/json" hidden>
+<input type="file" id="fileCamp" accept=".json,application/json,image/*" multiple hidden>
 
 <div id="playerWrap">
   <div id="pvRoot"></div>
   <div id="phint">Double-click for full screen</div>
+  <button id="pfull" hidden>⛶ Full screen</button>
 </div>
 
 <!-- PDF.js 3.11.174 (Apache-2.0, Mozilla), embedded so PDF import works offline -->
@@ -921,24 +994,37 @@ function drawPlayerTokens(g,tokens,s){
 // the text box can be dragged and resized; onLayout reports the new placement.
 function createPlayerView(root,opts={}){
   root.classList.add('pview'); if(opts.editable) root.classList.add('editable');
-  root.innerHTML=`<canvas class="pv-cv"></canvas><div class="pv-msg"></div>
-    <div class="pv-card" hidden><div class="pv-head"><span class="pv-key"></span><h3></h3></div><div class="pv-txt"></div>${opts.editable?'<div class="pv-grip" title="Drag to resize"></div>':''}</div>`;
-  const c=root.querySelector('.pv-cv'), g=c.getContext('2d'), card=root.querySelector('.pv-card'), msg=root.querySelector('.pv-msg');
+  root.innerHTML=`<div class="pv-inner"><canvas class="pv-cv"></canvas><div class="pv-msg"></div>
+    <div class="pv-card" hidden><div class="pv-head"><span class="pv-key"></span><h3></h3></div><div class="pv-txt"></div>${opts.editable?'<div class="pv-grip" title="Drag to resize"></div>':''}</div></div>`;
+  const inner=root.querySelector('.pv-inner'), c=root.querySelector('.pv-cv'), g=c.getContext('2d'), card=root.querySelector('.pv-card'), msg=root.querySelector('.pv-msg');
   msg.textContent=opts.waiting||'Waiting for the DM’s map';
   const fc=document.createElement('canvas'), sc=document.createElement('canvas');
-  const P={id:null,img:null,w:0,h:0,ops:[],secret:[],tokens:[],covers:[],view:null,black:false,card:null,layout:{...LAYOUT_DEFAULT}};
+  const P={id:null,img:null,w:0,h:0,ops:[],secret:[],tokens:[],covers:[],view:null,ppm:0,refW:0,black:false,card:null,test:null,layout:{...LAYOUT_DEFAULT}};
   let cardSig='';
+  const rot=()=>opts.noRotate?0:((P.layout.rot||0)%360+360)%360;
+  // size the inner box to the rotated screen; everything below works in its (unrotated) coordinates
+  function dims(){
+    const W=root.clientWidth, H=root.clientHeight, r=rot(), s=r%180===0;
+    const w=s?W:H, h=s?H:W;
+    Object.assign(inner.style,{width:w+'px',height:h+'px',transform:`translate(-50%,-50%) rotate(${r}deg)`});
+    return [w,h];
+  }
   function areas(W,H){
-    const L=P.layout;
-    if(P.card&&L.mode==='side'){const mw=Math.round(W*L.split); return {map:{x:0,y:0,w:mw,h:H},card:{x:mw,y:0,w:W-mw,h:H}}}
-    if(P.card&&L.mode==='full') return {map:null,card:{x:0,y:0,w:W,h:H}};
-    return {map:{x:0,y:0,w:W,h:H},card:{x:L.x*W,y:L.y*H,w:L.w*W,h:L.h*H}};
+    const L=P.layout, full={x:0,y:0,w:W,h:H};
+    if(P.card&&L.mode==='side'){
+      const f=L.split, sd=L.side||'right', vert=sd==='top'||sd==='bottom';
+      const mapA=vert?{x:0,y:sd==='top'?H*(1-f):0,w:W,h:H*f}:{x:sd==='left'?W*(1-f):0,y:0,w:W*f,h:H};
+      const cardA=vert?{x:0,y:sd==='top'?0:H*f,w:W,h:H*(1-f)}:{x:sd==='left'?0:W*f,y:0,w:W*(1-f),h:H};
+      return {map:L.over?full:mapA,card:cardA};
+    }
+    if(P.card&&L.mode==='full') return {map:null,card:full};
+    return {map:full,card:{x:L.x*W,y:L.y*H,w:L.w*W,h:L.h*H}};
   }
   function layoutCard(W,H){
     const cd=P.card;
     card.hidden=!cd; if(!cd){cardSig=''; return}
     const L=P.layout, A=areas(W,H).card, sig=JSON.stringify([cd,L,Math.round(W),Math.round(H)]);
-    card.className='pv-card '+L.mode;
+    card.className='pv-card '+L.mode+(L.over?' over':'');
     Object.assign(card.style,{left:A.x+'px',top:A.y+'px',width:A.w+'px',height:A.h+'px'});
     if(sig===cardSig) return; cardSig=sig;
     const key=card.querySelector('.pv-key'), h3=card.querySelector('h3'), txt=card.querySelector('.pv-txt');
@@ -946,46 +1032,62 @@ function createPlayerView(root,opts={}){
     h3.textContent=cd.title||''; h3.hidden=!cd.title;
     card.querySelector('.pv-head').hidden=key.hidden&&h3.hidden;
     txt.innerHTML=(cd.paras||[]).map(p=>`<p>${p.head?`<b>${esc(p.head)}.</b> `:''}${esc(p.text)}</p>`).join('');
-    const base=H*0.032;
+    const base=Math.min(H,W*0.6)*0.032;
     const apply=fs=>{card.style.fontSize=fs+'px'; card.style.padding=`${fs*0.8}px ${fs*1.05}px ${fs*0.5}px`};
     if(L.size>0) apply(base*L.size);
     else { let fs=base*1.25; apply(fs); for(let i=0;i<24&&card.scrollHeight>card.clientHeight+1&&fs>H*0.011;i++){fs*=0.92; apply(fs)} }
   }
   function draw(){
-    const dpr=devicePixelRatio||1, W=root.clientWidth, H=root.clientHeight; if(!W||!H) return;
+    const dpr=devicePixelRatio||1, [W,H]=dims(); if(!W||!H) return;
     if(c.width!==Math.round(W*dpr)) c.width=Math.round(W*dpr);
     if(c.height!==Math.round(H*dpr)) c.height=Math.round(H*dpr);
     g.setTransform(1,0,0,1,0,0); g.filter='none'; g.fillStyle='#000'; g.fillRect(0,0,c.width,c.height);
-    msg.style.display=(!P.img&&!P.black&&!P.card)?'grid':'none';
+    msg.style.display=(!P.img&&!P.black&&!P.card&&!P.test)?'grid':'none';
     layoutCard(W,H);
-    if(P.black||!P.img) return;
-    const A=areas(W,H).map; if(!A) return;
-    const r=P.view||{x:0,y:0,w:P.w,h:P.h};
-    const s=Math.min(A.w/r.w,A.h/r.h), ox=A.x+(A.w-r.w*s)/2-r.x*s, oy=A.y+(A.h-r.h*s)/2-r.y*s;
-    g.save(); g.beginPath(); g.rect(A.x*dpr,A.y*dpr,A.w*dpr,A.h*dpr); g.clip();
-    g.setTransform(s*dpr,0,0,s*dpr,ox*dpr,oy*dpr);
-    g.imageSmoothingQuality='high';
-    g.drawImage(P.img,0,0,P.w,P.h);
-    drawCovers(g,P.img,P.covers);
-    drawPlayerTokens(g,P.tokens,s);
-    g.filter=`blur(${Math.max(1,Math.round(3*dpr*Math.min(1,W/1000)))}px)`;
-    g.drawImage(fc,0,0,P.w,P.h);
-    g.filter='none';
-    if(P.secret&&P.secret.length) g.drawImage(sc,0,0,P.w,P.h);
-    g.restore();
+    if(!P.black&&P.img){
+      const A=areas(W,H).map;
+      if(A){
+        const r=P.view||{x:0,y:0,w:P.w,h:P.h};
+        let s,ox,oy;
+        if(P.ppm&&P.view){ // exact scale: the map stays put when text appears, so miniatures keep their place
+          s=P.ppm*W/(P.refW||W); ox=W/2-(r.x+r.w/2)*s; oy=H/2-(r.y+r.h/2)*s;
+        } else {s=Math.min(A.w/r.w,A.h/r.h); ox=A.x+(A.w-r.w*s)/2-r.x*s; oy=A.y+(A.h-r.h*s)/2-r.y*s}
+        g.save(); g.beginPath(); g.rect(A.x*dpr,A.y*dpr,A.w*dpr,A.h*dpr); g.clip();
+        g.setTransform(s*dpr,0,0,s*dpr,ox*dpr,oy*dpr);
+        g.imageSmoothingQuality='high';
+        g.drawImage(P.img,0,0,P.w,P.h);
+        drawCovers(g,P.img,P.covers);
+        drawPlayerTokens(g,P.tokens,s);
+        g.filter=`blur(${Math.max(1,Math.round(3*dpr*Math.min(1,W/1000)))}px)`;
+        g.drawImage(fc,0,0,P.w,P.h);
+        g.filter='none';
+        if(P.secret&&P.secret.length) g.drawImage(sc,0,0,P.w,P.h);
+        g.restore();
+      }
+    }
+    if(P.test){ // ruler check: squares of the table size, to measure on the TV
+      const q=P.test.px*W/(P.test.refW||W); if(q<4) return;
+      g.setTransform(dpr,0,0,dpr,0,0); g.strokeStyle='rgba(255,220,120,.9)'; g.lineWidth=1.5; g.beginPath();
+      for(let x=W/2%q;x<W;x+=q){g.moveTo(x,0); g.lineTo(x,H)}
+      for(let y=H/2%q;y<H;y+=q){g.moveTo(0,y); g.lineTo(W,y)}
+      g.stroke(); g.fillStyle='rgba(255,220,120,1)'; g.fillRect(W/2,H/2,q,q);
+      g.font='600 18px system-ui,sans-serif'; g.fillStyle='#fff'; g.textAlign='center';
+      g.fillText(`Each square should be ${P.test.mm} mm. Measure the filled one.`,W/2,H/2-q*0.5-12);
+    }
   }
   function handle(d){
     if(!d||typeof d!=='object') return;
     if(d.t==='map'){
-      P.id=d.id; P.w=d.w; P.h=d.h; P.ops=[]; P.view=null; P.tokens=[]; P.covers=[];
+      P.id=d.id; P.w=d.w; P.h=d.h; P.ops=[]; P.view=null; P.ppm=0; P.tokens=[]; P.covers=[];
       sizeFog(fc,d.w,d.h); paintFog(fc,[],d.w,d.h); sizeFog(sc,d.w,d.h); paintSecret(sc,[],d.w,d.h,'#000');
       loadImg(new Blob([d.buf],{type:d.type})).then(img=>{if(P.id===d.id){P.img=img; draw()}});
     } else if(d.t==='fog'){
       if(d.id===P.id){P.ops=d.ops; P.secret=d.secret||[]; paintFog(fc,P.ops,P.w,P.h); paintSecret(sc,P.secret,P.w,P.h,'#000'); draw()}
-    } else if(d.t==='view'){P.view=d.rect; draw()}
+    } else if(d.t==='view'){P.view=d.rect; P.ppm=d.ppm||0; P.refW=d.refW||0; draw()}
     else if(d.t==='black'){P.black=d.on; draw()}
     else if(d.t==='card'){P.card=d.card; draw()}
     else if(d.t==='layout'){P.layout={...LAYOUT_DEFAULT,...(d.layout||{})}; draw()}
+    else if(d.t==='test'){P.test=d.on?d:null; draw()}
     else if(d.t==='tokens'){if(d.id===P.id){P.tokens=d.tokens; draw()}}
     else if(d.t==='covers'){if(d.id===P.id){P.covers=d.covers; draw()}}
     else if(d.t==='clear'){P.id=null; P.img=null; draw()}
@@ -995,12 +1097,13 @@ function createPlayerView(root,opts={}){
     let dd=null;
     card.addEventListener('pointerdown',e=>{
       if(e.button!==0) return; e.preventDefault(); card.setPointerCapture(e.pointerId);
-      const W=root.clientWidth, H=root.clientHeight, L={...P.layout};
-      dd={grip:e.target.classList.contains('pv-grip'),x:e.clientX,y:e.clientY,L,W,H};
+      const [W,H]=dims(); dd={grip:e.target.classList.contains('pv-grip'),x:e.clientX,y:e.clientY,L:{...P.layout},W,H};
     });
     card.addEventListener('pointermove',e=>{
-      if(!dd) return; const dx=(e.clientX-dd.x)/dd.W, dy=(e.clientY-dd.y)/dd.H, L={...dd.L};
-      if(L.mode==='side') L.split=Math.max(0.5,Math.min(0.9,L.split+dx));
+      if(!dd) return;
+      const a=rot()*Math.PI/180, sx=e.clientX-dd.x, sy=e.clientY-dd.y;  // screen movement turned into the rotated box
+      const dx=(sx*Math.cos(a)+sy*Math.sin(a))/dd.W, dy=(-sx*Math.sin(a)+sy*Math.cos(a))/dd.H, L={...dd.L};
+      if(L.mode==='side'){const sd=L.side||'right', d=sd==='right'?dx:sd==='left'?-dx:sd==='bottom'?dy:-dy; L.split=Math.max(0.5,Math.min(0.9,L.split+d))}
       else if(L.mode==='float'){
         if(dd.grip){L.w=Math.max(0.15,Math.min(1-L.x,L.w+dx)); L.h=Math.max(0.1,Math.min(1-L.y,L.h+dy))}
         else {L.x=Math.max(0,Math.min(1-L.w,L.x+dx)); L.y=Math.max(0,Math.min(1-L.h,L.y+dy))}
@@ -1014,9 +1117,14 @@ function createPlayerView(root,opts={}){
   return {handle,draw,P,setMsg:t=>{msg.textContent=t; draw()}};
 }
 function fullScreenHelpers(){
-  let cursorT;
-  addEventListener('dblclick',()=>{if(document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.().catch(()=>{})});
-  addEventListener('mousemove',()=>{document.body.classList.add('cursor'); clearTimeout(cursorT); cursorT=setTimeout(()=>document.body.classList.remove('cursor'),1500)});
+  let cursorT; const fs=$('#pfull');
+  const toggle=()=>{if(document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen?.().catch(()=>{})};
+  const show=()=>{document.body.classList.add('cursor'); fs.hidden=!!document.fullscreenElement; clearTimeout(cursorT); cursorT=setTimeout(()=>{document.body.classList.remove('cursor'); fs.hidden=true},2500)};
+  fs.onclick=e=>{e.stopPropagation(); toggle(); fs.hidden=true};
+  addEventListener('dblclick',toggle);
+  addEventListener('mousemove',show); addEventListener('touchstart',show,{passive:true});
+  document.addEventListener('fullscreenchange',()=>{fs.hidden=true});
+  show();
   setTimeout(()=>{$('#phint').style.opacity='0'},4000);
 }
 // Optional own signalling server: localStorage 'lantern-peer' = {"host":"…","port":443,"path":"/","secure":true}
@@ -1026,7 +1134,7 @@ function playerApp(){
   document.body.className='player'; document.title='Lantern: player screen';
   const view=createPlayerView($('#pvRoot')); fullScreenHelpers();
   let lastMsg=0;
-  const sendSize=()=>window.opener&&window.opener.postMessage({t:'size',w:innerWidth,h:innerHeight},'*');
+  const sendSize=()=>window.opener&&window.opener.postMessage({t:'size',w:innerWidth,h:innerHeight,sw:screen.width,sh:screen.height,dpr:devicePixelRatio||1},'*');
   addEventListener('message',e=>{if(e.source!==window.opener) return; lastMsg=Date.now(); view.handle(e.data)});
   addEventListener('resize',()=>{clearTimeout(sendSize.t); sendSize.t=setTimeout(sendSize,250)});
   if(window.opener){
@@ -1037,7 +1145,7 @@ function playerApp(){
 /* an online viewer on another computer, joined through a shared link (#watch=ID) */
 function watchApp(peerId){
   document.body.className='player watch'; document.title='Lantern: player screen';
-  const view=createPlayerView($('#pvRoot'),{waiting:'Connecting to the DM…'}); fullScreenHelpers();
+  const view=createPlayerView($('#pvRoot'),{waiting:'Connecting to the DM…',noRotate:true}); fullScreenHelpers();
   if(!window.Peer){view.setMsg('This browser can’t open live connections.'); return}
   let peer=null, conn=null, retryT=null, got=false;
   const retry=(text,ms=5000)=>{if(text&&!got) view.setMsg(text); clearTimeout(retryT); retryT=setTimeout(connect,ms)};
@@ -1291,7 +1399,13 @@ function dmApp(){
     }
     ctx.setTransform(view.s*dpr,0,0,view.s*dpr,view.x*dpr,view.y*dpr); drawCoverMarks(m);
     if(drag&&drag.type==='cnew'){const x0=Math.min(drag.a[0],drag.b[0]),y0=Math.min(drag.a[1],drag.b[1]),w=Math.abs(drag.b[0]-drag.a[0]),h=Math.abs(drag.b[1]-drag.a[1]); ctx.setLineDash([6/view.s,4/view.s]); ctx.lineWidth=2/view.s; ctx.strokeStyle=C.accent; ctx.beginPath(); if(coverShape==='ellipse') ctx.ellipse(x0+w/2,y0+h/2,w/2,h/2,0,0,Math.PI*2); else ctx.rect(x0,y0,w,h); ctx.stroke(); ctx.setLineDash([])}
-    drawTokens(m); ctx.setTransform(dpr,0,0,dpr,0,0);
+    drawTokens(m); drawFrame(m); ctx.setTransform(dpr,0,0,dpr,0,0);
+    if(drag&&drag.type==='measure'){
+      const a=drag.a, b=drag.b, len=Math.hypot(b[0]-a[0],b[1]-a[1]);
+      ctx.beginPath(); ctx.moveTo(a[0]*view.s+view.x,a[1]*view.s+view.y); ctx.lineTo(b[0]*view.s+view.x,b[1]*view.s+view.y);
+      ctx.lineWidth=2.5; ctx.strokeStyle=C.reveal; ctx.stroke();
+      ctx.font='600 12px system-ui,sans-serif'; ctx.fillStyle=C.reveal; ctx.textAlign='left'; ctx.fillText(Math.round(len)+' px',b[0]*view.s+view.x+8,b[1]*view.s+view.y-8);
+    }
     if(tool==='brush'&&mouse&&brush.shape==='brush'){
       ctx.beginPath(); ctx.arc(mouse.sx,mouse.sy,brush.size*view.s,0,Math.PI*2);
       ctx.setLineDash([5,4]); ctx.lineWidth=1.5; ctx.strokeStyle=brush.mode==='secret'?SECRET_COL:brushRv(mouse.alt)?C.reveal:C.ink; ctx.stroke(); ctx.setLineDash([]);
@@ -1349,14 +1463,14 @@ function dmApp(){
   }
   function tokenHTML(m,tk){
     const r=tokR(m,tk), max=Math.max(200,Math.round(r*6));
-    return `<div class="side-top"><button class="link" data-act="back">All rooms</button></div>
+    return `<div class="side-top"><button class="link" data-act="back">Back</button></div>
       <input type="text" class="room-title" id="tokName" value="${esc(tk.name)}" placeholder="Name" aria-label="Token name" style="margin-top:10px">
       <div class="row"><div class="seg" role="group" aria-label="Kind">${Object.entries(TOK_KINDS).map(([k,v])=>`<button data-tkind="${k}" aria-pressed="${tk.kind===k}">${v.label}</button>`).join('')}</div>
         <label class="chk">Colour <input type="color" id="tokColor" value="${esc(tk.color||'#888888')}"></label></div>
       <label class="sec-line">Size <input type="range" id="tokSize" min="3" max="${max}" value="${r}" style="flex:1"><span id="tokSizeVal" style="min-width:3.5em;text-align:right">${r} px</span></label>
       <div class="section-title">On the player screen</div>
-      <label class="chk" style="margin:6px 0"><input type="checkbox" id="tokVisible" ${tk.visible!==false?'checked':''}> Players see this token</label>
-      <label class="chk" style="margin:6px 0"><input type="checkbox" id="tokShowName" ${tk.showName?'checked':''}> Players see its name</label>
+      <label class="tick tick-l" style="margin:6px 0"><input type="checkbox" id="tokVisible" ${tk.visible!==false?'checked':''}> Players see this token</label>
+      <label class="tick tick-l" style="margin:6px 0"><input type="checkbox" id="tokShowName" ${tk.showName?'checked':''}> Players see its name</label>
       <label class="sec-line" style="margin-top:8px">Name <select id="tokLabel">${[['below','below the token'],['above','above the token'],['right','to the right'],['left','to the left'],['off','hidden everywhere']].map(([v,l])=>`<option value="${v}" ${(tk.labelPos||'below')===v?'selected':''}>${l}</option>`).join('')}</select></label>
       <p class="muted" style="font-size:13px">Tokens in fogged areas stay hidden for players, so enemies in unexplored rooms don’t give themselves away.</p>
       <div class="danger-zone"><button data-act="tokDup" title="Copy with the next number, like Ghoul 2">Duplicate</button><button class="danger" data-act="tokDel" title="Delete">Delete token</button></div>`;
@@ -1431,12 +1545,15 @@ function dmApp(){
   function sendFog(){const m=curMap(); if(m) post({t:'fog',id:m.id,ops:fogOps(m),secret:m.secret||[]})}
   let fogT=0;
   function sendFogSoon(){ if(fogT) return; fogT=setTimeout(()=>{fogT=0; sendFog()},120) }
-  async function pushAll(){await sendMap(); sendFog(); sendTokens(); sendCovers(); post({t:'black',on:black}); post({t:'card',card:S.card}); post({t:'layout',layout:S.layout||LAYOUT_DEFAULT}); setPending(false)}
+  async function pushAll(){await sendMap(); sendFog(); sendTokens(); sendCovers(); post({t:'black',on:black}); post({t:'card',card:S.card}); post({t:'layout',layout:S.layout||LAYOUT_DEFAULT}); sendFrame(true); setPending(false)}
   function setPending(v){pending=v&&!live; $('#btnPush').hidden=live; $('#btnPush').disabled=!pending}
   addEventListener('message',e=>{
     const d=e.data; if(!d||typeof d!=='object') return;
     if(d.t==='ready'||(d.t==='ping'&&!connected())){playerWin=e.source; pushAll(); updatePlayerBtn()}
-    if(d.t==='size'&&d.w&&d.h&&e.source===playerWin){const ar=d.w/d.h; if(Math.abs((S.playerAR||0)-ar)>0.01){S.playerAR=ar; save(); if(previewOn) fitPreview()}}
+    if(d.t==='size'&&d.w&&d.h&&e.source===playerWin){
+      const ps={w:d.sw||d.w,h:d.sh||d.h,dpr:d.dpr||1}, o=S.playerScreen||{};
+      if(ps.w!==o.w||ps.h!==o.h||ps.dpr!==o.dpr){S.playerScreen=ps; save(); if(previewOn) fitPreview(); renderSetup(); renderFrameCtl(); sendFrame(true); dirty=true}
+    }
   });
   function updatePlayerBtn(){const b=$('#btnPlayer'), on=connected(); b.textContent=on?'Player screen is open':'Open player screen'; b.classList.toggle('on',!!on)}
   setInterval(updatePlayerBtn,1000);
@@ -1450,10 +1567,13 @@ function dmApp(){
   $('#btnPush').onclick=()=>{pushAll(); toast('Pushed to players.')};
   $('#btnBlack').onclick=e=>{black=!black; e.currentTarget.setAttribute('aria-pressed',black); post({t:'black',on:black})};
   $('#btnView').onclick=()=>{
-    if(!connected()){toast('Open the player screen first.'); return}
+    if(!connected()&&!peers.size){toast('Open the player screen first.'); return}
+    if(S.frameOn) setFrame(false);
+    const m=curMap(), p=tablePpm(m);
+    if(p){const E=effScreen(), [cx,cy]=viewCenter(), w=E.w/p, h=E.h/p; post({t:'view',rect:{x:cx-w/2,y:cy-h/2,w,h},ppm:p,refW:E.w}); toast('Players now see the middle of your view at table scale.'); return}
     post({t:'view',rect:{x:-view.x/view.s,y:-view.y/view.s,w:cw/view.s,h:ch/view.s}}); toast('Players now see your current view.');
   };
-  $('#btnFit').onclick=()=>{post({t:'view',rect:null}); if(connected()) toast('Players now see the whole map.')};
+  $('#btnFit').onclick=()=>{if(S.frameOn) setFrame(false); post({t:'view',rect:null}); if(connected()) toast('Players now see the whole map.')};
   $('#chkFog').onchange=e=>{showFog=e.target.checked; dirty=true};
   $('#selLabels').onchange=e=>{S.labelPos=e.target.value; save(); dirty=true};
 
@@ -1463,9 +1583,9 @@ function dmApp(){
     if(!connected()) toast('It will appear when you open the player screen.');
     renderSide();
   }
-  function shareBlocks(t,blocks){
+  function shareBlocks(t,blocks,whole){
     blocks.forEach(b=>b.shown=true);
-    shareCard({title:t.title||t.key||'',key:t.key||'',ref:blocks.length===1?blocks[0].id:t.id,paras:blocks.map(b=>({head:b.head,text:b.text}))});
+    shareCard({title:t.title||t.key||'',key:t.key||'',ref:whole?t.id:(blocks.length===1?blocks[0].id:t.id),paras:blocks.map(b=>({head:b.head,text:b.text}))});
   }
   function clearCard(){S.card=null; save(); post({t:'card',card:null}); renderSide()}
   /* ---- selected text: show, split out, merge, move ---- */
@@ -1576,7 +1696,7 @@ function dmApp(){
   ['keyup','click','select','input'].forEach(ev=>$('#side').addEventListener(ev,trackCaret));
 
   /* ---- tools ---- */
-  const cursorFor=()=>spaceDown?'grab':tool==='select'?'default':tool==='token'?'copy':tool==='cover'?'crosshair':tool==='brush'&&brush.shape==='brush'?'none':'crosshair';
+  const cursorFor=()=>spaceDown?'grab':tool==='select'?'default':tool==='token'?'copy':tool==='cover'||tool==='measure'?'crosshair':tool==='brush'&&brush.shape==='brush'?'none':'crosshair';
   function setTool(t){
     tool=t; poly=null; hover=null;
     document.querySelectorAll('[data-tool]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tool===t));
@@ -1598,6 +1718,7 @@ function dmApp(){
       <span class="hint">Drag a box over a mark to cover it with nearby floor. Drag the dashed box to copy from somewhere else.</span>`;
     else if(tool==='token') o.innerHTML=`<div class="seg" role="group" aria-label="New token">${Object.entries(TOK_KINDS).map(([k,v])=>`<button data-tk="${k}" aria-pressed="${tokKind===k}">${v.label}</button>`).join('')}</div>
       <span class="hint">Click the map to place a ${TOK_KINDS[tokKind].label.toLowerCase()}. Drag tokens to move them. Delete removes the selected one.</span>`;
+    else if(tool==='measure') o.innerHTML='<span class="hint">Drag along one side of a map square, or along several squares in a row for more precision. Esc cancels.</span>';
     else if(tool==='select') o.innerHTML='<span class="hint">Click a room to read it. Shift-click selects several. Right-click reveals or hides a room. Drag to move the map.</span>';
     else if(tool==='wand') o.innerHTML=`${modeSeg()}
       <label title="How different a color must be to count as a wall">Tolerance <input type="range" id="oTol" min="5" max="160" value="${wandOpt.tol}"></label>
@@ -1776,6 +1897,9 @@ function dmApp(){
     if(e.button===2){const a=hit(m,p); if(a) toggleReveal(sel.includes(a.id)&&sel.length>1?selAreas():[a]); return}
     if(e.button===1||spaceDown){drag={type:'pan',sx:p.sx,sy:p.sy,vx:view.x,vy:view.y}; return}
     if(e.button!==0) return;
+    const fh=frameHit(p);
+    if(fh&&m.frame){drag={type:'frame',part:fh,start:[p.x,p.y],o:{...m.frame}}; return}
+    if(tool==='measure'){drag={type:'measure',a:[p.x,p.y],b:[p.x,p.y]}; return}
     if(tool==='poly'&&polyMode==='rect'){drag={type:'rect',a:[p.x,p.y],b:[p.x,p.y],sx:p.sx,sy:p.sy}; return}
     if(tool==='brush'){
       const layer=brush.mode==='secret'?'secret':'fog', rv=brushRv(e.altKey);
@@ -1821,6 +1945,13 @@ function dmApp(){
     if(drag.type==='rect'){drag.b=[p.x,p.y]; drag.shift=p.shift; drag.alt=p.alt; dirty=true; return}
     if(drag.type==='frect'){drag.b=[p.x,p.y]; dirty=true; return}
     if(drag.type==='cnew'){drag.b=[p.x,p.y]; dirty=true; return}
+    if(drag.type==='measure'){drag.b=[p.x,p.y]; dirty=true; return}
+    if(drag.type==='frame'){
+      const f=m.frame, o=drag.o, dx=p.x-drag.start[0], dy=p.y-drag.start[1];
+      if(drag.part==='move'){f.cx=o.cx+dx; f.cy=o.cy+dy}
+      else {const left=o.cx-o.w/2; f.w=Math.max(20,o.w+dx); f.cx=left+f.w/2; const E=effScreen(), top=o.cy-o.w*E.h/E.w/2; f.cy=top+f.w*E.h/E.w/2}
+      sendFrame(); renderFrameCtl(); dirty=true; return;
+    }
     if(drag.type==='cover'){
       const c=drag.cv, o=drag.o, dx=p.x-drag.start[0], dy=p.y-drag.start[1];
       if(drag.part==='move'){c.x=r1(o.x+dx); c.y=r1(o.y+dy)}
@@ -1860,6 +1991,15 @@ function dmApp(){
       if(Math.abs(p.sx-d.sx)<6||Math.abs(p.sy-d.sy)<6){const a=hit(m,p); if(a&&effMode(p)==='new') selectArea(a.id); return}
       const x0=r1(Math.min(d.a[0],p.x)), x1=r1(Math.max(d.a[0],p.x)), y0=r1(Math.min(d.a[1],p.y)), y1=r1(Math.max(d.a[1],p.y));
       poly=[[x0,y0],[x1,y0],[x1,y1],[x0,y1]]; finishPoly(p); return;
+    }
+    if(d.type==='frame'){save(); sendFrame(true); return}
+    if(d.type==='measure'){
+      dirty=true; const len=Math.hypot(d.b[0]-d.a[0],d.b[1]-d.a[1]);
+      if(len*view.s<8){toast('Drag along the side of a square: from one grid line to the next.'); return}
+      const n=parseFloat((prompt(`The line is ${Math.round(len)} map pixels long. How many squares does it cover?`,'1')||'').replace(',','.'));
+      if(!(n>0)) return;
+      m.gridPx=r1(len/n); save(); setTool('select'); setScr(true); screenChanged();
+      toast(`One square = ${m.gridPx} map pixels.${scr().on?'':' Tick “Keep miniature scale” to use it.'}`,5000); return;
     }
     if(d.type==='cnew'){
       dirty=true; const x=Math.min(d.a[0],p.x), y=Math.min(d.a[1],p.y), w=Math.abs(p.x-d.a[0]), h=Math.abs(p.y-d.a[1]);
@@ -1924,9 +2064,14 @@ function dmApp(){
     else if(k==='t') setTool('token');
     else if(k==='y') setTool('cover');
     else if(k==='p') setPreview(!previewOn);
+    else if(e.key==='?') setHelp(helpWin.hidden);
     else if(k==='h') toggleReveal(selAreas());
     else if(k==='m') mergeSelected();
     else if(k==='f') fit();
+    else if(k==='z') tableZoom();
+    else if(S.frameOn&&m&&e.key.startsWith('Arrow')){const st=frameStep(m)*(e.shiftKey?5:1), dir={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[e.key]; moveFrame(dir[0]*st,dir[1]*st); e.preventDefault(); return}
+    else if(S.frameOn&&(e.key==='+'||e.key==='=')) resizeFrame(1/1.1);
+    else if(S.frameOn&&(e.key==='-'||e.key==='_')) resizeFrame(1.1);
     else if(k==='c'&&S.card) clearCard();
     else if(k==='['){brush.size=Math.max(10,Math.round(brush.size/1.2)); renderOpts(); dirty=true}
     else if(k===']'){brush.size=Math.min(600,Math.round(brush.size*1.2)); renderOpts(); dirty=true}
@@ -1936,7 +2081,7 @@ function dmApp(){
     else if((e.key==='Delete'||e.key==='Backspace')&&tokSel){deleteToken(); e.preventDefault()}
     else if((e.key==='Delete'||e.key==='Backspace')&&sel.length){deleteSelected(); e.preventDefault()}
     else if(e.key==='Escape'){
-      if(poly) poly=null; else if(coverSel){coverSel=null; renderSide()} else if(tokSel){tokSel=null; renderSide()} else if(armed){armed=null; renderSide()} else if(sel.length||textSel){sel=[]; textSel=null; editText=null; renderSide()}
+      if(tool==='measure') setTool('select'); else if(poly) poly=null; else if(coverSel){coverSel=null; renderSide()} else if(tokSel){tokSel=null; renderSide()} else if(armed){armed=null; renderSide()} else if(sel.length||textSel){sel=[]; textSel=null; editText=null; renderSide()}
       dirty=true;
     }
     else if(e.key===' '){spaceDown=true; cv.style.cursor='grab'; e.preventDefault(); if(document.activeElement&&document.activeElement.tagName==='BUTTON') document.activeElement.blur()}
@@ -1964,7 +2109,7 @@ function dmApp(){
     else if(m&&sel.length>1){vkey='multi'; html=multiHTML(m)}
     else if(m&&sel.length===1&&areaById(m,sel[0])){vkey='room:'+sel[0]; html=roomHTML(m,areaById(m,sel[0]))}
     else if(textSel&&textById(textSel)){vkey='text:'+textSel; html=textViewHTML(textById(textSel))}
-    else {vkey='list:'+panel; html=`<div class="tabs seg" role="tablist"><button role="tab" data-tab="rooms" aria-pressed="${panel==='rooms'}">Rooms on this map</button><button role="tab" data-tab="texts" aria-pressed="${panel==='texts'}">Texts</button></div>`+(panel==='rooms'?roomsListHTML(m):textsListHTML())}
+    else {vkey='list:'+panel; html=tabsHTML(m)+(panel==='texts'?textsListHTML():panel==='notes'?notesListHTML(m):panel==='covers'?coversListHTML(m):panel==='tokens'?tokensListHTML(m):roomsListHTML(m))}
     const sc=side.scrollTop;
     side.innerHTML=cardBarHTML()+html;
     side.scrollTop=vkey===lastView?sc:0;
@@ -1985,7 +2130,7 @@ function dmApp(){
     if(!m) return `<p class="muted" style="margin-top:16px">Add a map to place rooms. Your imported texts are on the Texts tab.</p>`;
     const rows=sortedAreas(m).map(a=>{
       const rev=isRevealed(m,a.id);
-      return `<li><button class="row-btn" data-area="${a.id}"><span class="dot ${rev?'rev':'on'}" title="${rev?'Revealed to players':'Hidden from players'}"></span><span class="k">${esc(a.key||'?')}</span><span class="t">${esc(areaTitle(a)||(a.texts.length?'':'No text linked'))}</span></button></li>`;
+      return `<li class="item"><button class="row-btn" data-area="${a.id}"><span class="dot ${rev?'rev':'on'}" title="${rev?'Revealed to players':'Hidden from players'}"></span><span class="k">${esc(a.key||'?')}</span><span class="t">${esc(areaTitle(a)||(a.texts.length?'':'No text linked'))}</span></button>${tick('room',a.id,rev,'Players see this room')}</li>`;
     }).join('');
     const mapTexts=(m.mapTexts||[]).map(textById).filter(Boolean);
     const unplaced=S.texts.filter(t=>t.key&&!isPlaced(t.id)&&sameSection(t,m)).length;
@@ -1998,28 +2143,48 @@ function dmApp(){
       <label class="sec-line" title="How far past a room’s outline the players see when you reveal it, in pixels of the map image. Raise it to show the walls; lower it, even below zero, if neighbouring rooms peek through.">Reveal margin <input type="range" id="mapPad" min="-20" max="40" value="${wallPad(m)}" style="flex:1"><span id="padVal" style="min-width:4.5em;text-align:right">${wallPad(m)} px</span>${m.pad!=null?'<button class="link" data-act="padReset" title="Back to the automatic margin">Reset</button>':''}</label>
       ${(m.secret||[]).length?`<p class="muted" style="font-size:13px;margin:6px 0">${m.secret.length} “never show” mark${m.secret.length===1?'':'s'} on this map (purple). Edit them with the Fog brush, mode Never show. <button class="link" data-act="clearSecret">Remove all</button></p>`:''}
       ${armedHTML()}
-      ${mapTexts.length?`<div class="section-title">Notes for the whole map</div><ul class="list">${mapTexts.map(t=>`<li><button class="row-btn" data-text="${t.id}"><span class="dot on"></span><span class="t" style="color:inherit">${esc(t.title||t.key||'Notes')}</span></button></li>`).join('')}</ul>`:''}
-      ${(m.covers||[]).length?`<div class="section-title">Covers: ${m.covers.length}</div><ul class="list">${m.covers.map(c=>`<li><button class="row-btn" data-cov="${c.id}"><span class="dot ${c.on!==false?'on':''}"></span><span class="t" style="color:inherit">${esc(c.name)}</span><span class="w">${c.on!==false?'covering':'players see the mark'}</span></button></li>`).join('')}</ul>`:''}
-      ${(m.tokens||[]).length?`<div class="section-title">Tokens: ${m.tokens.length}</div><ul class="list">${m.tokens.map(tk=>`<li><button class="row-btn" data-tok="${tk.id}"><span class="dot" style="background:${esc(tk.color)};border-color:${esc(tk.color)}"></span><span class="t" style="color:inherit">${esc(tk.name)}</span><span class="w">${tk.visible===false?'hidden from players':tk.showName?'name shown':'name hidden'}</span></button></li>`).join('')}</ul>`:''}
       <div class="section-title">Rooms: ${m.areas.length}${unplaced?`<span class="sp"></span><button class="link" data-tab="texts">${unplaced} text${unplaced===1?'':'s'} not placed yet</button>`:''}</div>
-      ${rows?`<ul class="list">${rows}</ul>`:`<p class="muted">No rooms yet. Click inside a room with Pick room (W), or import the adventure text first and place each text on the map.</p>`}
-      <div class="section-title">Shortcuts</div>
-      <div class="keys"><kbd>Q W E R</kbd><span>Select, pick room, draw outline, fog brush</span>
-      <kbd>E again</kbd><span>Switch between drawing a rectangle and clicking corners</span>
-      <kbd>A S</kbd><span>Previous and next room</span>
-      <kbd>H</kbd><span>Reveal or hide the selected rooms (or right-click)</span>
-      <kbd>T</kbd><span>Tokens: click to place a character or enemy, drag to move</span>
-      <kbd>Y</kbd><span>Covers: hide a mark behind nearby floor</span>
-      <kbd>P</kbd><span>Preview of the player screen</span>
-      <kbd>Shift</kbd><span>Select several rooms; add to a room while picking or drawing</span>
-      <kbd>Alt</kbd><span>Subtract from a room while picking or drawing</span>
-      <kbd>M</kbd><span>Merge the selected rooms</span><kbd>Delete</kbd><span>Delete the selected rooms</span>
-      <kbd>C</kbd><span>Remove the text from the player screen</span>
-      <kbd>Page Up / Down</kbd><span>Previous and next floor in the section</span>
-      <kbd>Fog brush, Never show</kbd><span>Purple marks players never see, like a secret door’s S</span>
-      <kbd>Space + drag</kbd><span>Move the map; scroll to zoom; F fits it</span>
-      <kbd>Ctrl+Z</kbd><span>Undo; Ctrl+Shift+Z redoes</span><kbd>Esc</kbd><span>Cancel, deselect</span></div>
+      ${rows?`${listHead('Room','Players see')}<ul class="list">${rows}</ul>`:`<p class="muted">No rooms yet. Click inside a room with Pick room (W), or import the adventure text first and place each text on the map.</p>`}
       <div class="danger-zone"><button class="danger" data-act="delMap">Delete this map</button></div>`;
+  }
+
+  /* ---- the five lists, with the same on/off ticks everywhere ---- */
+  const tick=(kind,id,on,title,extra='')=>`<label class="tick" title="${esc(title)}"><input type="checkbox" data-tick="${kind}" data-id="${id}" ${on?'checked':''} ${extra}><span class="sr">${esc(title)}</span></label>`;
+  const listHead=(...cols)=>`<div class="list-head"><span>${cols[0]}</span>${cols.slice(1).map(c=>`<span class="lh-c">${c}</span>`).join('')}</div>`;
+  function tabsHTML(m){
+    const n=x=>x?` <span class="tab-n">${x}</span>`:'';
+    const tabs=[['rooms','Rooms',m?m.areas.length:0],['texts','Texts',S.texts.length],['notes','Notes',m?(m.mapTexts||[]).length:0],['covers','Covers',m?(m.covers||[]).length:0],['tokens','Tokens',m?(m.tokens||[]).length:0]];
+    return `<div class="tabs seg tabs5" role="tablist">${tabs.map(([k,l,c])=>`<button role="tab" data-tab="${k}" aria-pressed="${panel===k}">${l}${n(c)}</button>`).join('')}</div>`;
+  }
+  function notesListHTML(m){
+    if(!m) return '<p class="muted" style="margin-top:16px">Add a map first.</p>';
+    const notes=(m.mapTexts||[]).map(textById).filter(Boolean);
+    return `<p class="muted" style="font-size:13px;margin:10px 0">Notes for the whole map, like general features or the general notes from an import. Tick one to show it on the player screen.</p>
+      <div class="row"><button data-act="newNote">New note</button></div>
+      ${notes.length?`${listHead('Note','On player screen')}<ul class="list">${notes.map(t=>`<li class="item"><button class="row-btn" data-text="${t.id}"><span class="t" style="color:inherit">${esc(t.title||t.key||'Notes')}</span><span class="w">${t.blocks.length} ¶</span></button>${tick('note',t.id,S.card&&S.card.ref===t.id,'Show on the player screen')}</li>`).join('')}</ul>`
+        :'<p class="muted">No notes for this map yet. Open any text and choose “Attach to the whole map”, or make a new note.</p>'}`;
+  }
+  function coversListHTML(m){
+    if(!m) return '<p class="muted" style="margin-top:16px">Add a map first.</p>';
+    const cs=m.covers||[];
+    return `<p class="muted" style="font-size:13px;margin:10px 0">Covers hide marks like a secret door’s S behind nearby floor. Add them with the Covers tool (Y). Untick a cover when the party discovers what is under it.</p>
+      ${cs.length?`${listHead('Cover','Covering')}<ul class="list">${cs.map(c=>`<li class="item"><button class="row-btn" data-cov="${c.id}"><span class="t" style="color:inherit">${esc(c.name)}</span></button>${tick('cover',c.id,c.on!==false,'Covering the mark for players')}</li>`).join('')}</ul>`
+        :'<p class="muted">No covers on this map yet.</p>'}`;
+  }
+  function tokensListHTML(m){
+    if(!m) return '<p class="muted" style="margin-top:16px">Add a map first.</p>';
+    const ts=m.tokens||[];
+    return `<p class="muted" style="font-size:13px;margin:10px 0">Characters, enemies and NPCs. Place them with the Tokens tool (T) and drag them on the map.</p>
+      ${ts.length?`${listHead('Token','Seen','Name')}<ul class="list">${ts.map(tk=>`<li class="item"><button class="row-btn" data-tok="${tk.id}"><span class="dot" style="background:${esc(tk.color)};border-color:${esc(tk.color)}"></span><span class="t" style="color:inherit">${esc(tk.name)}</span></button>${tick('tokVis',tk.id,tk.visible!==false,'Players see this token')}${tick('tokName',tk.id,!!tk.showName,'Players see its name')}</li>`).join('')}</ul>`
+        :'<p class="muted">No tokens on this map yet.</p>'}`;
+  }
+  function onTick(t){
+    const m=curMap(), id=t.dataset.id, on=t.checked;
+    if(t.dataset.tick==='room'){const a=areaById(m,id); if(a&&isRevealed(m,a.id)!==on) toggleReveal([a]); return}
+    if(t.dataset.tick==='cover'){const c=coverById(m,id); if(c){snap(); c.on=on; save(); coversChanged(); dirty=true}}
+    if(t.dataset.tick==='tokVis'||t.dataset.tick==='tokName'){const tk=tokById(m,id); if(tk){snap(); if(t.dataset.tick==='tokVis') tk.visible=on; else tk.showName=on; save(); tokensChanged(); dirty=true}}
+    if(t.dataset.tick==='note'){const tx=textById(id); if(tx){if(on) shareBlocks(tx,tx.blocks,true); else clearCard(); return}}
+    renderSide();
   }
   function textRowsHTML(){
     const q=textQuery.trim().toLowerCase();
@@ -2068,7 +2233,7 @@ function dmApp(){
   function roomHTML(m,a){
     const rev=isRevealed(m,a.id), texts=a.texts.map(textById).filter(Boolean);
     const opts=S.texts.filter(t=>!a.texts.includes(t.id)).map(t=>`<option value="${esc((t.key?t.key+' ':'')+t.title)}"></option>`).join('');
-    return `<div class="side-top"><button class="link" data-act="back">All rooms</button></div>
+    return `<div class="side-top"><button class="link" data-act="back">Back</button></div>
       ${armedHTML()}
       <input type="text" class="room-key" id="roomKey" value="${esc(a.key)}" placeholder="Key" aria-label="Room key" autocomplete="off">
       <input type="text" class="room-title" id="roomName" value="${esc(a.name)}" placeholder="${esc(texts.find(t=>t.title)?.title||'Room name')}" aria-label="Room name">
@@ -2084,7 +2249,7 @@ function dmApp(){
   }
   function multiHTML(m){
     const areas=selAreas();
-    return `<div class="side-top"><button class="link" data-act="back">All rooms</button></div>
+    return `<div class="side-top"><button class="link" data-act="back">Back</button></div>
       <h2 style="margin-top:12px">${areas.length} rooms selected</h2>
       <div class="chips">${areas.map(a=>`<span class="chip">${esc(a.key||'?')} <button data-unsel="${a.id}" aria-label="Remove from selection">×</button></span>`).join('')}</div>
       <div class="row"><button class="primary" data-act="merge" title="M">Merge into one room</button><button data-act="reveal" title="H">Reveal or hide</button><button class="danger" data-act="delArea" title="Delete">Delete</button></div>
@@ -2138,8 +2303,9 @@ function dmApp(){
       case 'coverNext': {const cv=coverById(m,coverSel); if(cv){snap(); autoSource(m,cv,true); save(); coversChanged(); dirty=true}} break;
       case 'coverFlipH': case 'coverFlipV': {const cv=coverById(m,coverSel); if(cv){snap(); if(b.dataset.act==='coverFlipH') cv.flipH=!cv.flipH; else cv.flipV=!cv.flipV; save(); coversChanged(); renderSide()}} break;
       case 'tokDup': duplicateToken(); break;
-      case 'back': coverSel=null; tokSel=null; sel=[]; textSel=null; editText=null; panel='rooms'; renderSide(); dirty=true; break;
-      case 'backTexts': textSel=null; editText=null; panel='texts'; renderSide(); break;
+      case 'back': coverSel=null; tokSel=null; sel=[]; textSel=null; editText=null; renderSide(); dirty=true; break;
+      case 'newNote': if(m){snap(); const nt={id:uid(),key:'',title:'Map notes',blocks:[{id:newBid(),type:'features',head:'',text:''}],group:m.group||''}; S.texts.push(nt); m.mapTexts=m.mapTexts||[]; m.mapTexts.push(nt.id); textSel=nt.id; editText=nt.id; save(); renderSide()} break;
+      case 'backTexts': textSel=null; editText=null; if(panel!=='notes') panel='texts'; renderSide(); break;
       case 'disarm': armed=null; renderSide(); break;
       case 'clearCard': clearCard(); break;
       case 'import': openImport(); break;
@@ -2154,7 +2320,7 @@ function dmApp(){
       case 'merge': mergeSelected(); break;
       case 'delArea': deleteSelected(); break;
       case 'shareBlock': if(t&&blk){if(S.card&&S.card.ref===blk.id) clearCard(); else shareBlocks(t,[blk])} break;
-      case 'shareText': if(t){if(S.card&&S.card.ref===t.id) clearCard(); else shareBlocks(t,t.blocks)} break;
+      case 'shareText': if(t){if(S.card&&S.card.ref===t.id) clearCard(); else shareBlocks(t,t.blocks,true)} break;
       case 'editText': if(t){editText=t.id; renderSide()} break;
       case 'doneEdit': editText=null; renderSide(); break;
       case 'unlink': if(a&&t){snap(); a.texts=a.texts.filter(x=>x!==t.id); save(); renderSide(); dirty=true} break;
@@ -2207,6 +2373,7 @@ function dmApp(){
       if(t&&!isPlaced(t.id)){a.texts.push(t.id); if(armed===t.id) armed=nextUnplaced(t.id); toast(`Linked the text ${t.key} ${t.title}.`)}
       save(); renderSide(); dirty=true; return;
     }
+    if(tg.dataset&&tg.dataset.tick){onTick(tg); return}
     if(tg.id==='mapPad'){side._padSnap=false; renderSide(); return}
     const cvy=m&&coverById(m,coverSel);
     if(cvy&&tg.id==='coverOn'){snap(); cvy.on=tg.checked; save(); coversChanged(); dirty=true; toast(tg.checked?'Players see the floor patch again.':'Players now see the real mark.',2500); return}
@@ -2243,6 +2410,7 @@ function dmApp(){
   function switchMap(id){
     S.cur=id; sel=[]; tokSel=null; coverSel=null; poly=null; editText=null; wandCache=null;
     rebuildFog(); fit(); renderMapSel(); renderSide(); updateEmpty(); save();
+    renderSetup(); renderFrameCtl();
     if(live) pushAll(); else setPending(true);
   }
   async function addMapFromFile(file){
@@ -2868,10 +3036,28 @@ function dmApp(){
   $('#btnPdf').onclick=()=>$('#filePdf').click();
   $('#filePdf').onchange=e=>{const f=e.target.files[0]; e.target.value=''; if(f) openPdf(f)};
 
+
+  /* ---- floating shortcuts window ---- */
+  const helpWin=$('#helpWin');
+  function setHelp(on){
+    helpWin.hidden=!on; $('#btnHelp').setAttribute('aria-pressed',on);
+    S.ui=S.ui||{}; S.ui.help={...(S.ui.help||{}),on}; save();
+  }
+  (function placeHelp(){
+    const p=(S.ui&&S.ui.help)||{};
+    if(p.w) helpWin.style.width=p.w+'px'; if(p.h) helpWin.style.height=p.h+'px';
+    if(p.x!=null){helpWin.style.left=Math.min(innerWidth-120,Math.max(0,p.x))+'px'; helpWin.style.top=Math.min(innerHeight-60,Math.max(0,p.y))+'px'}
+  })();
+  $('#helpBar').addEventListener('pointerdown',e=>{if(e.target.closest('button')) return; e.preventDefault(); $('#helpBar').setPointerCapture(e.pointerId); const r=helpWin.getBoundingClientRect(); setHelp.drag={dx:e.clientX-r.left,dy:e.clientY-r.top}});
+  $('#helpBar').addEventListener('pointermove',e=>{const d=setHelp.drag; if(!d) return; helpWin.style.left=Math.max(0,Math.min(innerWidth-80,e.clientX-d.dx))+'px'; helpWin.style.top=Math.max(0,Math.min(innerHeight-40,e.clientY-d.dy))+'px'});
+  $('#helpBar').addEventListener('pointerup',()=>{if(!setHelp.drag) return; setHelp.drag=null; const r=helpWin.getBoundingClientRect(); S.ui.help={...S.ui.help,x:Math.round(r.left),y:Math.round(r.top)}; save()});
+  new ResizeObserver(()=>{if(helpWin.hidden) return; const r=helpWin.getBoundingClientRect(); S.ui=S.ui||{}; S.ui.help={...(S.ui.help||{}),w:Math.round(r.width),h:Math.round(r.height)}; clearTimeout(setHelp.t); setHelp.t=setTimeout(save,400)}).observe(helpWin);
+  $('#btnHelp').onclick=e=>{setHelp(helpWin.hidden); e.currentTarget.blur()};
+  $('#helpClose').onclick=()=>setHelp(false);
   /* ---- player-screen preview: a floating window on the DM view ---- */
   const SAMPLE_CARD={title:'Sample text',key:'X5',ref:'sample',paras:[{head:'',text:'This is how shown text will look on the player screen. Drag this box to move it and drag its corner to resize it; in side-panel mode, drag it sideways to change the split.'}]};
   const pvWin=$('#pvWin');
-  function previewAR(){return S.playerAR||16/9}
+  function previewAR(){const p=S.playerScreen; return p?p.w/p.h:16/9}
   function fitPreview(){
     const host=$('#pvHost'), inner=$('#pvRoot2'); if(!host||!inner) return;
     const W=host.clientWidth, H=host.clientHeight, ar=previewAR();
@@ -2888,7 +3074,7 @@ function dmApp(){
         if(connected()) try{playerWin.postMessage({t:'layout',layout:L},'*')}catch(e){}
         remember({t:'layout',layout:L});
         clearTimeout(setPreview.lt); setPreview.lt=setTimeout(()=>{for(const c of peers) if(c.open) try{c.send({t:'layout',layout:L})}catch(e){}},done?0:120);
-        if(done) renderLayoutPanel();
+        if(done){renderSetup(); dirty=true}
       }});
       new ResizeObserver(()=>{fitPreview(); const r=pvWin.getBoundingClientRect(); S.ui.preview={...S.ui.preview,w:Math.round(r.width),h:Math.round(r.height)}; clearTimeout(fitPreview.t); fitPreview.t=setTimeout(save,400)}).observe(pvWin);
     }
@@ -2914,30 +3100,186 @@ function dmApp(){
   $('#pvClose').onclick=()=>setPreview(false);
 
   /* ---- text layout on the player screen ---- */
-  function renderLayoutPanel(){
-    const L={...LAYOUT_DEFAULT,...(S.layout||{})}, pnl=$('#pvSettings');
-    pnl.innerHTML=`<div class="row" style="margin-top:0"><div class="seg" role="group" aria-label="Text layout">
-        <button data-lm="float" aria-pressed="${L.mode==='float'}">Floating box</button><button data-lm="side" aria-pressed="${L.mode==='side'}">Side panel</button><button data-lm="full" aria-pressed="${L.mode==='full'}">Full screen</button></div></div>
-      ${L.mode==='side'?`<label class="sec-line">Map width <input type="range" id="lySplit" min="50" max="90" value="${Math.round(L.split*100)}" style="flex:1"><span style="min-width:3em;text-align:right">${Math.round(L.split*100)} %</span></label>`:''}
-      <label class="chk" style="margin:6px 0"><input type="checkbox" id="lyAuto" ${L.size>0?'':'checked'}> Fit text size automatically</label>
+  function setLayout(L){S.layout=L; save(); post({t:'layout',layout:L}); renderSetup(); dirty=true}
+  $('#pvSettingsBtn').onclick=()=>setScr(true);
+  // a floating window that remembers where it was put and how big it was
+  function makeFloating(win,bar,key){
+    const p=(S.ui&&S.ui[key])||{};
+    if(p.w) win.style.width=p.w+'px'; if(p.h) win.style.height=p.h+'px';
+    if(p.x!=null){win.style.left=Math.min(innerWidth-120,Math.max(0,p.x))+'px'; win.style.top=Math.min(innerHeight-60,Math.max(0,p.y))+'px'; win.style.right='auto'}
+    let d=null;
+    const keep=()=>{const r=win.getBoundingClientRect(); S.ui=S.ui||{}; S.ui[key]={x:Math.round(r.left),y:Math.round(r.top),w:Math.round(r.width),h:Math.round(r.height)}; save()};
+    bar.addEventListener('pointerdown',e=>{if(e.target.closest('button')) return; e.preventDefault(); bar.setPointerCapture(e.pointerId); const r=win.getBoundingClientRect(); d={dx:e.clientX-r.left,dy:e.clientY-r.top}});
+    bar.addEventListener('pointermove',e=>{if(!d) return; Object.assign(win.style,{left:Math.max(0,Math.min(innerWidth-80,e.clientX-d.dx))+'px',top:Math.max(0,Math.min(innerHeight-40,e.clientY-d.dy))+'px',right:'auto'})});
+    bar.addEventListener('pointerup',()=>{if(d){d=null; keep()}});
+    let t; new ResizeObserver(()=>{if(win.hidden) return; clearTimeout(t); t=setTimeout(keep,400)}).observe(win);
+  }
+  /* ---- player screen: size, rotation, table scale, frame ---- */
+  const SCR_DEFAULT={diag:55,sq:25.4,calib:1,on:false};
+  const scr=()=>({...SCR_DEFAULT,...(S.screen||{})});
+  const rotOf=()=>((S.layout||{}).rot||0);
+  // the player screen in CSS pixels, turned the way the picture is rotated
+  function effScreen(){const p=S.playerScreen||{w:1920,h:1080}; return rotOf()%180?{w:p.h,h:p.w}:{w:p.w,h:p.h}}
+  function pxPerMm(){const p=S.playerScreen||{w:1920,h:1080}, c=scr(); return Math.hypot(p.w,p.h)/(c.diag*25.4)*c.calib}
+  // player-screen pixels per map pixel that make one map square as big as one table square, or 0
+  const tablePpm=m=>{const c=scr(); return c.on&&m&&m.gridPx?pxPerMm()*c.sq/m.gridPx:0};
+  function frameRect(m){
+    const E=effScreen(), f=m.frame||(m.frame={cx:m.w/2,cy:m.h/2,w:m.w*0.5}), p=tablePpm(m);
+    const w=p?E.w/p:f.w, h=w*E.h/E.w;
+    return {x:f.cx-w/2,y:f.cy-h/2,w,h,ppm:E.w/w,refW:E.w};
+  }
+  let frameT=0;
+  function sendFrame(now){
+    const m=curMap(); if(!S.frameOn||!m) return;
+    const go=()=>{frameT=0; const r=frameRect(m); post({t:'view',rect:{x:r.x,y:r.y,w:r.w,h:r.h},ppm:r.ppm,refW:r.refW})};
+    if(now){clearTimeout(frameT); go()} else if(!frameT) frameT=setTimeout(go,50);
+  }
+  function viewCenter(){return [(cw/2-view.x)/view.s,(ch/2-view.y)/view.s]}
+  function setFrame(on){
+    S.frameOn=on; save(); $('#btnFrame').setAttribute('aria-pressed',on); $('#frameCtl').hidden=!on;
+    const m=curMap();
+    if(on&&m){
+      const [cx,cy]=viewCenter(); m.frame={...(m.frame||{}),cx,cy,w:(m.frame&&m.frame.w)||Math.min(m.w,cw/view.s*0.7)};
+      sendFrame(true); renderFrameCtl();
+      if(!connected()&&!peers.size) toast('The frame shows what the player screen will show. Open the player screen to use it.');
+    } else if(!on) post({t:'view',rect:null});
+    dirty=true;
+  }
+  function moveFrame(dx,dy){const m=curMap(); if(!m||!m.frame) return; m.frame.cx+=dx; m.frame.cy+=dy; save(); sendFrame(); dirty=true}
+  function frameStep(m){return m.gridPx||frameRect(m).w*0.05}
+  function resizeFrame(f){
+    const m=curMap(); if(!m) return;
+    if(tablePpm(m)){toast('The frame size is fixed by the table scale. Turn off “Keep miniature scale” in Screen setup to resize it.'); return}
+    m.frame.w=Math.max(20,Math.min(m.w*4,m.frame.w*f)); save(); sendFrame(); renderFrameCtl(); dirty=true;
+  }
+  // zoom my own view so the area players would see fills my map view
+  function tableZoom(){
+    const m=curMap(); if(!m) return;
+    const E=effScreen(), p=tablePpm(m);
+    let w,h,cx,cy;
+    if(S.frameOn){const r=frameRect(m); w=r.w; h=r.h; cx=r.x+w/2; cy=r.y+h/2}
+    else if(p){w=E.w/p; h=E.h/p; [cx,cy]=viewCenter()}
+    else {toast('Set the table scale in Screen setup first, or turn on the screen frame.'); return}
+    view.s=Math.min(cw/w,ch/h)*0.96; view.x=cw/2-cx*view.s; view.y=ch/2-cy*view.s; dirty=true;
+  }
+  function renderFrameCtl(){
+    const m=curMap(); if(!m||!S.frameOn) return;
+    const r=frameRect(m), p=tablePpm(m), sq=m.gridPx?` · ${Math.round(r.w/m.gridPx)} × ${Math.round(r.h/m.gridPx)} squares`:'';
+    $('#frInfo').textContent=(p?'Table scale':'Free size')+sq;
+    $('#frMinus').disabled=$('#frPlus').disabled=!!p;
+  }
+  function drawFrame(m){
+    if(!S.frameOn||!m) return;
+    const r=frameRect(m), X=r.x*view.s+view.x, Y=r.y*view.s+view.y, W=r.w*view.s, H=r.h*view.s;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    // the text area of the player screen, hatched
+    const L={...LAYOUT_DEFAULT,...(S.layout||{})};
+    let t=null;
+    if(L.mode==='side'){const f=L.split, sd=L.side||'right'; t=sd==='right'?[f,0,1-f,1]:sd==='left'?[0,0,1-f,1]:sd==='bottom'?[0,f,1,1-f]:[0,0,1,1-f]}
+    else if(L.mode==='full') t=[0,0,1,1]; else t=[L.x,L.y,L.w,L.h];
+    const tx=X+t[0]*W, ty=Y+t[1]*H, tw=t[2]*W, th=t[3]*H;
+    ctx.save(); ctx.beginPath(); ctx.rect(tx,ty,tw,th); ctx.clip();
+    if(S.card){ctx.fillStyle='rgba(20,18,12,.35)'; ctx.fillRect(tx,ty,tw,th); ctx.strokeStyle='rgba(230,171,72,.75)'; ctx.lineWidth=1.5; ctx.beginPath(); for(let d=-th;d<tw;d+=11){ctx.moveTo(tx+d,ty+th); ctx.lineTo(tx+d+th,ty)} ctx.stroke()}
+    ctx.restore();
+    ctx.setLineDash(S.card?[]:[5,4]); ctx.lineWidth=1.2; ctx.strokeStyle='rgba(230,171,72,.8)'; ctx.strokeRect(tx,ty,tw,th); ctx.setLineDash([]);
+    // the frame itself
+    ctx.lineWidth=2.5; ctx.strokeStyle=C.reveal; ctx.strokeRect(X,Y,W,H);
+    const lab=`Player screen${tablePpm(m)?' · table scale':''}`;
+    ctx.font='600 12px system-ui,sans-serif'; const lw=ctx.measureText(lab).width+16;
+    ctx.fillStyle=C.reveal; ctx.fillRect(X,Y-20,lw,20); ctx.fillStyle='#fff'; ctx.textAlign='left'; ctx.textBaseline='middle'; ctx.fillText(lab,X+8,Y-10);
+    if(!tablePpm(m)){ctx.fillStyle=C.reveal; ctx.fillRect(X+W-9,Y+H-9,18,18)}
+    frameHit.box={X,Y,W,H,lw};
+  }
+  // grab the frame by its label, its border or (free size) its corner
+  function frameHit(p){
+    const b=frameHit.box, m=curMap(); if(!S.frameOn||!b||!m) return null;
+    const {X,Y,W,H,lw}=b, x=p.sx, y=p.sy;
+    if(!tablePpm(m)&&Math.abs(x-(X+W))<11&&Math.abs(y-(Y+H))<11) return 'size';
+    if(x>=X&&x<=X+lw&&y>=Y-20&&y<=Y) return 'move';
+    const near=(a,v)=>Math.abs(a-v)<7;
+    if((near(x,X)||near(x,X+W))&&y>Y-7&&y<Y+H+7||(near(y,Y)||near(y,Y+H))&&x>X-7&&x<X+W+7) return 'move';
+    return null;
+  }
+  $('#btnFrame').onclick=e=>{setFrame(!S.frameOn); e.currentTarget.blur()};
+  $('#btnTableZoom').onclick=e=>{tableZoom(); e.currentTarget.blur()};
+  $('#frameCtl').addEventListener('click',e=>{
+    const b=e.target.closest('[data-fr]'); if(!b) return; const m=curMap(); if(!m) return; const st=frameStep(m);
+    const a=b.dataset.fr;
+    if(a==='l') moveFrame(-st,0); else if(a==='r') moveFrame(st,0); else if(a==='u') moveFrame(0,-st); else if(a==='d') moveFrame(0,st);
+    else if(a==='plus') resizeFrame(1/1.1); else if(a==='minus') resizeFrame(1.1);
+    else if(a==='here'){const [cx,cy]=viewCenter(); m.frame.cx=cx; m.frame.cy=cy; save(); sendFrame(); dirty=true}
+    else if(a==='zoom') tableZoom();
+  });
+
+  /* ---- screen setup window ---- */
+  const scrWin=$('#scrWin'); let testOn=false;
+  function setScr(on){scrWin.hidden=!on; $('#btnScreen').setAttribute('aria-pressed',on); if(on) renderSetup(); else if(testOn){testOn=false; post({t:'test',on:false})}}
+  function sendTest(){const c=scr(), E=effScreen(); post({t:'test',on:testOn,px:pxPerMm()*c.sq,refW:E.w,mm:c.sq})}
+  function renderSetup(){
+    if(scrWin.hidden) return;
+    const c=scr(), p=S.playerScreen, m=curMap(), E=effScreen(), ppm=tablePpm(m), L={...LAYOUT_DEFAULT,...(S.layout||{})};
+    const rots=[[0,'Normal'],[90,'Turned right'],[180,'Upside down'],[270,'Turned left']];
+    const squares=ppm?`${(E.w/(pxPerMm()*c.sq)).toFixed(1)} × ${(E.h/(pxPerMm()*c.sq)).toFixed(1)} squares on the screen`:'';
+    $('#scrBody').innerHTML=`
+      <h3>Player screen</h3>
+      <p class="muted">${p?`Detected: <b>${p.w} × ${p.h}</b> px${p.dpr&&p.dpr!==1?` (× ${p.dpr} = ${Math.round(p.w*p.dpr)} × ${Math.round(p.h*p.dpr)} real pixels)`:''}, from the player window.`:'Not detected yet: open the player screen on the TV. Until then Lantern assumes 1920 × 1080.'}</p>
+      <label class="sec-line">Screen diagonal <input type="number" id="scDiag" min="5" max="200" step="0.5" value="${c.diag}" style="width:6em"> inches <span class="muted">(${(c.diag*2.54).toFixed(0)} cm)</span></label>
+      <div class="lbl">Turn the picture</div>
+      <div class="seg" role="group" aria-label="Rotation">${rots.map(([v,l])=>`<button data-rot="${v}" aria-pressed="${(L.rot||0)===v}">${l}</button>`).join('')}</div>
+      <h3>Miniature scale</h3>
+      <label class="chk"><input type="checkbox" id="scOn" ${c.on?'checked':''}> Keep miniature scale: one map square = one table square</label>
+      <label class="sec-line">One square on the table <input type="number" id="scSq" min="5" max="100" step="0.1" value="${c.sq}" style="width:6em"> mm <span class="muted">(25.4 mm = 1 inch)</span></label>
+      <label class="sec-line">This map: one square = <input type="number" id="scGrid" min="2" step="0.1" value="${m&&m.gridPx?m.gridPx:''}" placeholder="not set" style="width:7em"> map pixels</label>
+      <div class="row"><button data-scr="measure" ${m?'':'disabled'}>Measure a square on the map</button></div>
+      <p class="muted" style="font-size:12.5px">${!m?'Add a map first.':!m.gridPx?'Drag along one side of a square on the map, or along several squares in a row.':c.on?`Players see about ${squares}.`:'Tick “Keep miniature scale” to use it.'}</p>
+      <div class="lbl">Check with a ruler</div>
+      <div class="row"><button data-scr="test" aria-pressed="${testOn}">${testOn?'Hide the test squares':'Show test squares on the TV'}</button></div>
+      ${testOn?`<label class="sec-line">The filled square measures <input type="number" id="scMeasured" min="1" step="0.5" style="width:6em" placeholder="${c.sq}"> mm <button data-scr="calibrate">Correct</button></label>`:''}
+      ${c.calib!==1?`<p class="muted" style="font-size:12.5px">Corrected by ${((c.calib-1)*100).toFixed(1)} %. <button class="link" data-scr="calReset">Undo the correction</button></p>`:''}
+      <h3>Text on the player screen</h3>
+      <div class="seg" role="group" aria-label="Text layout"><button data-lm="float" aria-pressed="${L.mode==='float'}">Floating box</button><button data-lm="side" aria-pressed="${L.mode==='side'}">Side panel</button><button data-lm="full" aria-pressed="${L.mode==='full'}">Full screen</button></div>
+      ${L.mode==='side'?`<div class="row"><div class="seg" role="group" aria-label="Side">${[['left','Left'],['right','Right'],['top','Top'],['bottom','Bottom']].map(([v,l])=>`<button data-lside="${v}" aria-pressed="${(L.side||'right')===v}">${l}</button>`).join('')}</div></div>
+        <div class="seg" role="group" aria-label="Panel and map"><button data-lover="1" aria-pressed="${!!L.over}" title="The map stays as it is; the panel lies over it">Over the map</button><button data-lover="0" aria-pressed="${!L.over}" title="The map only fills the rest of the screen">Beside the map</button></div>
+        <label class="sec-line">Map share <input type="range" id="lySplit" min="50" max="90" value="${Math.round(L.split*100)}" style="flex:1"><span style="min-width:3em;text-align:right">${Math.round(L.split*100)} %</span></label>
+        <p class="muted" style="font-size:12.5px">${S.frameOn||ppm?'At table scale the map never moves or zooms when text appears, so miniatures stay in place; the text covers the hatched part of the frame.':'Beside the map: without the frame or table scale, the map zooms out to fit next to the text.'}</p>`:''}
+      <label class="chk" style="margin:8px 0"><input type="checkbox" id="lyAuto" ${L.size>0?'':'checked'}> Fit text size automatically</label>
       ${L.size>0?`<label class="sec-line">Text size <input type="range" id="lySize" min="40" max="250" value="${Math.round(L.size*100)}" style="flex:1"><span style="min-width:3em;text-align:right">${Math.round(L.size*100)} %</span></label>`:''}
       <label class="chk" style="margin:6px 0"><input type="checkbox" id="lyKey" ${L.showKey?'checked':''}> Show the room key, like X5</label>
-      <label class="chk" style="margin:6px 0"><input type="checkbox" id="lySample" ${previewSample?'checked':''}> Show a sample text here (only in this preview)</label>
-      <p class="muted" style="font-size:12.5px;margin:6px 0 0">${L.mode==='float'?'Drag the text box in the preview to move it; drag its corner to resize it.':L.mode==='side'?'Drag the text panel in the preview sideways to change the split.':'Text fills the whole player screen while it is shown.'}</p>`;
+      <label class="chk" style="margin:6px 0"><input type="checkbox" id="lySample" ${previewSample?'checked':''}> Show a sample text in the preview</label>`;
   }
-  function setLayout(L){S.layout=L; save(); post({t:'layout',layout:L}); renderLayoutPanel()}
-  $('#pvSettingsBtn').onclick=()=>{const p=$('#pvSettings'); p.hidden=!p.hidden; if(!p.hidden) renderLayoutPanel()};
-  $('#pvSettings').addEventListener('click',e=>{const b=e.target.closest('[data-lm]'); if(b) setLayout({...LAYOUT_DEFAULT,...(S.layout||{}),mode:b.dataset.lm})});
-  $('#pvSettings').addEventListener('input',e=>{
-    const L={...LAYOUT_DEFAULT,...(S.layout||{})}, t=e.target;
-    if(t.id==='lySplit'){L.split=+t.value/100; t.nextElementSibling.textContent=t.value+' %'; S.layout=L; post({t:'layout',layout:L}); save()}
-    if(t.id==='lySize'){L.size=+t.value/100; t.nextElementSibling.textContent=t.value+' %'; S.layout=L; post({t:'layout',layout:L}); save()}
+  function screenChanged(){save(); renderSetup(); renderFrameCtl(); sendFrame(true); if(testOn) sendTest(); dirty=true}
+  $('#btnScreen').onclick=e=>{setScr(scrWin.hidden); e.currentTarget.blur()};
+  $('#scrClose').onclick=()=>setScr(false);
+  makeFloating(scrWin,$('#scrBar'),'screenWin');
+  $('#scrBody').addEventListener('click',e=>{
+    const b=e.target.closest('[data-scr],[data-rot],[data-lm],[data-lside],[data-lover]'); if(!b) return;
+    const L={...LAYOUT_DEFAULT,...(S.layout||{})};
+    if(b.dataset.rot!==undefined){L.rot=+b.dataset.rot; setLayout(L); if(previewOn) fitPreview(); screenChanged(); return}
+    if(b.dataset.lm){L.mode=b.dataset.lm; setLayout(L); return}
+    if(b.dataset.lside){L.side=b.dataset.lside; setLayout(L); return}
+    if(b.dataset.lover!==undefined){L.over=b.dataset.lover==='1'; setLayout(L); return}
+    const a=b.dataset.scr;
+    if(a==='measure'){setTool('measure'); toast('Drag along one side of a square, or along several squares in a row.',5000)}
+    else if(a==='test'){testOn=!testOn; sendTest(); renderSetup(); if(testOn&&!connected()) toast('Open the player screen to see the test squares on the TV.')}
+    else if(a==='calibrate'){
+      const v=+$('#scMeasured').value, c=scr(); if(!(v>0)){toast('Enter what the filled square measures on the TV, in mm.'); return}
+      S.screen={...c,calib:c.calib*c.sq/v}; screenChanged(); toast('Corrected. Measure again to check.');
+    } else if(a==='calReset'){S.screen={...scr(),calib:1}; screenChanged()}
   });
-  $('#pvSettings').addEventListener('change',e=>{
+  $('#scrBody').addEventListener('change',e=>{
+    const t=e.target, c=scr(), m=curMap(), L={...LAYOUT_DEFAULT,...(S.layout||{})};
+    if(t.id==='scDiag'&&+t.value>0){S.screen={...c,diag:+t.value}; screenChanged()}
+    else if(t.id==='scSq'&&+t.value>0){S.screen={...c,sq:+t.value}; screenChanged()}
+    else if(t.id==='scOn'){S.screen={...c,on:t.checked}; if(t.checked&&m&&!m.gridPx) toast('Now measure a square on this map.'); screenChanged()}
+    else if(t.id==='scGrid'&&m){m.gridPx=+t.value>0?+t.value:0; screenChanged()}
+    else if(t.id==='lyAuto'){L.size=t.checked?0:1; setLayout(L)}
+    else if(t.id==='lyKey'){L.showKey=t.checked; setLayout(L)}
+    else if(t.id==='lySample'){previewSample=t.checked; if(preview) preview.handle({t:'card',card:S.card||(previewSample?SAMPLE_CARD:null)})}
+  });
+  $('#scrBody').addEventListener('input',e=>{
     const L={...LAYOUT_DEFAULT,...(S.layout||{})}, t=e.target;
-    if(t.id==='lyAuto'){L.size=t.checked?0:1; setLayout(L)}
-    if(t.id==='lyKey'){L.showKey=t.checked; setLayout(L)}
-    if(t.id==='lySample'){previewSample=t.checked; if(preview) preview.handle({t:'card',card:S.card||(previewSample?SAMPLE_CARD:null)})}
+    if(t.id==='lySplit'){L.split=+t.value/100; t.nextElementSibling.textContent=t.value+' %'; S.layout=L; post({t:'layout',layout:L}); save(); dirty=true}
+    if(t.id==='lySize'){L.size=+t.value/100; t.nextElementSibling.textContent=t.value+' %'; S.layout=L; post({t:'layout',layout:L}); save()}
   });
 
   /* ---- share the player screen online (WebRTC through the free PeerJS service) ---- */
@@ -3064,9 +3406,9 @@ function dmApp(){
   }
   function coverHTML(m,cv){
     const maxF=Math.max(1,Math.round(Math.min(cv.w,cv.h)/2));
-    return `<div class="side-top"><button class="link" data-act="back">All rooms</button></div>
+    return `<div class="side-top"><button class="link" data-act="back">Back</button></div>
       <input type="text" class="room-title" id="coverName" value="${esc(cv.name)}" placeholder="Name, like Secret door X5b" aria-label="Cover name" style="margin-top:10px">
-      <label class="chk" style="margin:10px 0"><input type="checkbox" id="coverOn" ${cv.on!==false?'checked':''}> <b>Covering for players</b></label>
+      <label class="tick tick-l" style="margin:10px 0"><input type="checkbox" id="coverOn" ${cv.on!==false?'checked':''}> <b>Covering for players</b></label>
       <p class="muted" style="font-size:13px;margin-top:-4px">Untick when the party discovers it: players then see the real mark.</p>
       <div class="row"><div class="seg" role="group" aria-label="Shape"><button data-cshape="rect" aria-pressed="${cv.shape!=='ellipse'}">Rectangle</button><button data-cshape="ellipse" aria-pressed="${cv.shape==='ellipse'}">Oval</button></div>
         <button data-act="coverFlipH" aria-pressed="${!!cv.flipH}" title="Mirror the patch left to right">Mirror ↔</button><button data-act="coverFlipV" aria-pressed="${!!cv.flipV}" title="Mirror the patch top to bottom">Mirror ↕</button></div>
@@ -3086,9 +3428,9 @@ function dmApp(){
   function ghSave(c){try{localStorage.setItem(GH_KEY,JSON.stringify(c))}catch(e){toast('This browser can’t keep the GitHub settings.')}}
   async function gh(t,method,path,body){
     const r=await fetch(`https://api.github.com/repos/${encodeURIComponent(t.owner)}/${encodeURIComponent(t.repo)}${path}`,{method,cache:'no-store',
-      headers:{'Accept':'application/vnd.github+json','Authorization':`Bearer ${t.token}`,'X-GitHub-Api-Version':'2022-11-28',...(body?{'Content-Type':'application/json'}:{})},
+      headers:{'Accept':'application/vnd.github+json',...(t.token?{'Authorization':`Bearer ${t.token}`}:{}),'X-GitHub-Api-Version':'2022-11-28',...(body?{'Content-Type':'application/json'}:{})},
       body:body?JSON.stringify(body):undefined});
-    if(!r.ok){let j={}; try{j=await r.json()}catch(e){} const err=new Error(j.message||r.statusText||('HTTP '+r.status)); err.status=r.status; throw err}
+    if(!r.ok){let j={}; try{j=await r.json()}catch(e){} const err=new Error(r.status===403&&!t.token?'GitHub’s limit for opening without a token was reached (60 requests an hour). Wait a while or add a token.':(j.message||r.statusText||('HTTP '+r.status))); err.status=r.status===403&&!t.token?429:r.status; throw err}
     return r.status===204?null:r.json();
   }
   const ghReady=t=>t&&t.owner&&t.repo&&t.token;
@@ -3185,7 +3527,7 @@ function dmApp(){
           <label class="wide">Access token <input type="password" data-gf="token" value="${esc(t.token)}" placeholder="github_pat_…" autocomplete="off"></label></div>
         <div class="row"><button data-ga="test">Test connection</button><span class="muted git-test" style="font-size:13px"></span></div>
       </fieldset>`).join('')}</div>
-      <p class="muted" style="font-size:13px">Tokens are kept only in this browser on this device, never in campaign files or exports. Create one at github.com → Settings → Developer settings → <b>Fine-grained tokens</b>: choose <b>Only select repositories</b>, pick these repositories, and set <b>Contents</b> to <b>Read and write</b>.</p>
+      <p class="muted" style="font-size:13px">Opening a campaign from a public repository works without a token; saving always needs one. Tokens are kept only in this browser on this device, never in campaign files or exports. Create one at github.com → Settings → Developer settings → <b>Fine-grained tokens</b>: choose <b>Only select repositories</b>, pick these repositories, and set <b>Contents</b> to <b>Read and write</b>.</p>
       <div class="git-act"><h3>Save this campaign</h3>
         <div class="row"><input type="text" id="gitName" value="${esc(S.name||curMap()?.group||curMap()?.name||'My campaign')}" placeholder="Campaign name" style="flex:1"><button class="primary" data-ga="save" ${ghBusy?'disabled':''}>Save to ${esc(cur.label.toLowerCase())}</button></div></div>
       <div class="git-act"><h3>Open a campaign</h3>
@@ -3205,14 +3547,15 @@ function dmApp(){
     const c=ghConf(), status=m=>{const s=$('#gitStatus'); if(s) s.textContent=m};
     if(b.dataset.ga==='test'){
       const id=b.closest('[data-gt]').dataset.gt, t=c.targets.find(x=>x.id===id), out=b.parentElement.querySelector('.git-test');
-      if(!ghReady(t)){out.textContent='Fill in owner, repository and token first.'; return}
+      if(!t.owner||!t.repo){out.textContent='Fill in owner and repository first.'; return}
       out.textContent='Checking…';
       try{const info=await gh(t,'GET',''); out.textContent=`Found ${info.full_name}: ${info.private?'private':'public'}, ${info.permissions&&info.permissions.push?'can save':'read only (token needs Contents: Read and write)'}.`}
-      catch(err){out.textContent=err.status===404?'Not found: check owner and repository name, and that the token includes this repository.':err.status===401?'The token was refused. Check that it is copied completely and not expired.':'Error: '+err.message}
+      catch(err){out.textContent=err.status===429?err.message:err.status===404?'Not found: check owner and repository name, and that the token includes this repository.':err.status===401?'The token was refused. Check that it is copied completely and not expired.':'Error: '+err.message}
       return;
     }
     const t=c.targets.find(x=>x.id===c.last)||c.targets[0];
-    if(!ghReady(t)){status('Fill in owner, repository and access token for the selected repository first.'); return}
+    if(!t.owner||!t.repo){status('Fill in owner and repository for the selected repository first.'); return}
+    if(b.dataset.ga==='save'&&!t.token){status('Saving needs an access token. Opening from a public repository works without one.'); return}
     if(ghBusy) return;
     try{
       ghBusy=true;
@@ -3273,14 +3616,24 @@ function dmApp(){
   };
   $('#btnOpenCamp').onclick=()=>$('#fileCamp').click();
   $('#fileCamp').onchange=async e=>{
-    const f=e.target.files[0]; e.target.value=''; if(!f) return;
+    const files=[...e.target.files]; e.target.value=''; if(!files.length) return;
+    const f=files.find(x=>/\.json$/i.test(x.name)); if(!f){toast('Choose the campaign’s .json file (and, for a campaign from GitHub, its map images).'); return}
     let d; try{d=JSON.parse(await f.text())}catch(err){toast('That file isn’t a Lantern campaign.'); return}
     if(d?.app!=='lantern'||!d.state?.maps){toast('That file isn’t a Lantern campaign.'); return}
+    // a campaign saved to GitHub keeps its maps as separate files: match them by file name
+    const byName=new Map(files.filter(x=>x!==f).map(x=>[x.name,x]));
+    const missing=[];
+    for(const [id,v] of Object.entries(d.images||{})){
+      if(/^data:/.test(v)) continue;
+      const fl=byName.get(String(v).split('/').pop());
+      if(fl) d.images[id]=fl; else {let have=null; try{have=await dbGet('images',id)}catch(x){} if(have) d.images[id]=have; else {missing.push(v); delete d.images[id]}}
+    }
+    if(missing.length&&!confirm(`${missing.length} map image${missing.length===1?' is':'s are'} missing (${missing.slice(0,3).join(', ')}${missing.length>3?'…':''}). Select the campaign.json together with all files from its maps folder. Open anyway, without those maps?`)) return;
     if((S.maps.length||S.texts.length)&&!confirm('Replace the campaign in this browser with the one from the file? Export first if you want to keep the current one.')) return;
     for(const m of S.maps) dbDel('images',m.imageId).catch(()=>{});
     IM.clear();
     for(const [id,u] of Object.entries(d.images||{})){
-      const blob=dataURLToBlob(u);
+      const blob=typeof u==='string'?dataURLToBlob(u):u;
       try{IM.set(id,{img:await loadImg(blob),blob}); dbPut('images',id,blob).catch(()=>{})}catch(err){}
     }
     S=migrate(d.state); undoStack.length=0; redoStack.length=0; armed=null; textSel=null;
@@ -3330,6 +3683,8 @@ function dmApp(){
     if(!curMap()&&S.maps.length) S.cur=S.maps[0].id;
     $('#selLabels').value=S.labelPos||'edge';
     if(S.ui&&S.ui.preview&&S.ui.preview.on) setTimeout(()=>setPreview(true),0);
+    if(S.ui&&S.ui.help&&S.ui.help.on) setHelp(true);
+    if(S.frameOn){$('#btnFrame').setAttribute('aria-pressed',true); $('#frameCtl').hidden=false; setTimeout(renderFrameCtl,0)}
     if(S.share&&S.share.on) startShare();
     rebuildFog(); fit(); renderMapSel(); renderSide(); updateEmpty(); setTool('select'); setPending(false);
   })();
