@@ -129,6 +129,7 @@ input.room-title:hover,input.room-title:focus{border-color:var(--line);backgroun
 .blk-bar .shown{color:var(--reveal)}
 .blk .share{font-size:12px;padding:2px 9px;opacity:0;transition:opacity .12s}
 .blk:hover .share,.blk:focus-within .share,.blk.on-screen .share{opacity:1}
+.blk .share+.share{margin-left:4px}
 @media (hover:none){.blk .share{opacity:1}}
 .blk .share[aria-pressed="true"]{background:var(--reveal);border-color:var(--reveal);color:#fff}
 .blk-text{font-family:var(--serif);font-size:16.5px;line-height:1.62}
@@ -317,9 +318,8 @@ body.player #playerWrap{display:block;position:fixed;inset:0}
 .pv-card.side.over{background:rgba(18,16,12,.82)}
 .pv-card.full{border:none;border-radius:0;box-shadow:none;background:#0e0d0a}
 .pv-head{display:flex;gap:.55em;align-items:center;margin-bottom:.55em}
-.pv-head[hidden]{display:none}
+.pv-part+.pv-part:not(.same){border-top:1px solid rgba(225,190,120,.3);padding-top:.6em;margin-top:.2em}
 .pv-key{background:#dcb769;color:#1b1408;border-radius:.35em;padding:0 .4em;font:700 .8em/1.5 var(--sans)}
-.pv-key[hidden]{display:none}
 .pv-card h3{margin:0;font-weight:500;font-size:.8em;color:#dcb769;letter-spacing:.01em}
 .pv-txt p{margin:0 0 .7em}
 .pv-txt b{color:#f3d996}
@@ -401,7 +401,8 @@ body.player #playerWrap{display:block;position:fixed;inset:0}
   <aside id="side" aria-label="Rooms and texts"></aside>
 </main>
 <div id="selBar" hidden role="toolbar" aria-label="Selected text">
-  <button data-sa="share" class="sb-share">Show to players</button>
+  <button data-sa="share" class="sb-share" title="Replace what players see with the selection">Show to players</button>
+  <button data-sa="add" title="Add the selection below what players already see">Add to screen</button>
   <button data-sa="split" title="Make the selected words their own paragraph">Split out</button>
   <button data-sa="merge" title="Join the selected paragraphs into one">Merge paragraphs</button>
   <button data-sa="move" title="Move the selected words to another text">Move to…</button>
@@ -953,6 +954,7 @@ function fmt(t){
 }
 
 /* ================= PLAYER VIEW (shared by the player window, the DM preview and online viewers) ================= */
+const LANTERN_V=10;
 const LAYOUT_DEFAULT={mode:'float',x:0.12,y:0.6,w:0.76,h:0.36,split:0.78,size:0,showKey:true};
 // Covers: a patch of nearby floor copied over a mark (secret door, trap symbol) with a soft edge.
 const coverCache=new WeakMap();
@@ -995,7 +997,7 @@ function drawPlayerTokens(g,tokens,s){
 function createPlayerView(root,opts={}){
   root.classList.add('pview'); if(opts.editable) root.classList.add('editable');
   root.innerHTML=`<div class="pv-inner"><canvas class="pv-cv"></canvas><div class="pv-msg"></div>
-    <div class="pv-card" hidden><div class="pv-head"><span class="pv-key"></span><h3></h3></div><div class="pv-txt"></div>${opts.editable?'<div class="pv-grip" title="Drag to resize"></div>':''}</div></div>`;
+    <div class="pv-card" hidden><div class="pv-txt"></div>${opts.editable?'<div class="pv-grip" title="Drag to resize"></div>':''}</div></div>`;
   const inner=root.querySelector('.pv-inner'), c=root.querySelector('.pv-cv'), g=c.getContext('2d'), card=root.querySelector('.pv-card'), msg=root.querySelector('.pv-msg');
   msg.textContent=opts.waiting||'Waiting for the DM’s map';
   const fc=document.createElement('canvas'), sc=document.createElement('canvas');
@@ -1027,11 +1029,12 @@ function createPlayerView(root,opts={}){
     card.className='pv-card '+L.mode+(L.over?' over':'');
     Object.assign(card.style,{left:A.x+'px',top:A.y+'px',width:A.w+'px',height:A.h+'px'});
     if(sig===cardSig) return; cardSig=sig;
-    const key=card.querySelector('.pv-key'), h3=card.querySelector('h3'), txt=card.querySelector('.pv-txt');
-    key.textContent=cd.key||''; key.hidden=!(L.showKey&&cd.key);
-    h3.textContent=cd.title||''; h3.hidden=!cd.title;
-    card.querySelector('.pv-head').hidden=key.hidden&&h3.hidden;
-    txt.innerHTML=(cd.paras||[]).map(p=>`<p>${p.head?`<b>${esc(p.head)}.</b> `:''}${esc(p.text)}</p>`).join('');
+    // several texts can be on screen at once; each keeps its own room key and name
+    card.querySelector('.pv-txt').innerHTML=(cd.parts||[cd]).map((pt,i,all)=>{
+      if(i&&all[i-1].key===pt.key&&all[i-1].title===pt.title) return `<div class="pv-part same">${(pt.paras||[]).map(p=>`<p>${p.head?`<b>${esc(p.head)}.</b> `:''}${esc(p.text)}</p>`).join('')}</div>`;
+      const key=L.showKey&&pt.key?`<span class="pv-key">${esc(pt.key)}</span>`:'', title=pt.title?`<h3>${esc(pt.title)}</h3>`:'';
+      return `<div class="pv-part">${key||title?`<div class="pv-head">${key}${title}</div>`:''}${(pt.paras||[]).map(p=>`<p>${p.head?`<b>${esc(p.head)}.</b> `:''}${esc(p.text)}</p>`).join('')}</div>`;
+    }).join('');
     const base=Math.min(H,W*0.6)*0.032;
     const apply=fs=>{card.style.fontSize=fs+'px'; card.style.padding=`${fs*0.8}px ${fs*1.05}px ${fs*0.5}px`};
     if(L.size>0) apply(base*L.size);
@@ -1138,8 +1141,8 @@ function playerApp(){
   addEventListener('message',e=>{if(e.source!==window.opener) return; lastMsg=Date.now(); view.handle(e.data)});
   addEventListener('resize',()=>{clearTimeout(sendSize.t); sendSize.t=setTimeout(sendSize,250)});
   if(window.opener){
-    window.opener.postMessage({t:'ready'},'*'); sendSize();
-    setInterval(()=>{if(window.opener&&Date.now()-lastMsg>4000) window.opener.postMessage({t:'ping'},'*')},3000);
+    window.opener.postMessage({t:'ready',v:LANTERN_V},'*'); sendSize();
+    setInterval(()=>{if(window.opener&&Date.now()-lastMsg>4000) window.opener.postMessage({t:'ping',v:LANTERN_V},'*')},3000);
   } else view.setMsg('Open this screen with “Open player screen” in the DM window.');
 }
 /* an online viewer on another computer, joined through a shared link (#watch=ID) */
@@ -1549,7 +1552,10 @@ function dmApp(){
   function setPending(v){pending=v&&!live; $('#btnPush').hidden=live; $('#btnPush').disabled=!pending}
   addEventListener('message',e=>{
     const d=e.data; if(!d||typeof d!=='object') return;
-    if(d.t==='ready'||(d.t==='ping'&&!connected())){playerWin=e.source; pushAll(); updatePlayerBtn()}
+    if(d.t==='ready'||(d.t==='ping'&&!connected())){
+      playerWin=e.source; pushAll(); updatePlayerBtn();
+      if((d.v||0)<LANTERN_V) toast('The player window runs an older Lantern. Close it, then open it again with “Open player screen”.',9000);
+    }
     if(d.t==='size'&&d.w&&d.h&&e.source===playerWin){
       const ps={w:d.sw||d.w,h:d.sh||d.h,dpr:d.dpr||1}, o=S.playerScreen||{};
       if(ps.w!==o.w||ps.h!==o.h||ps.dpr!==o.dpr){S.playerScreen=ps; save(); if(previewOn) fitPreview(); renderSetup(); renderFrameCtl(); sendFrame(true); dirty=true}
@@ -1578,14 +1584,19 @@ function dmApp(){
   $('#selLabels').onchange=e=>{S.labelPos=e.target.value; save(); dirty=true};
 
   /* ---- sharing text with players ---- */
-  function shareCard(card){
-    S.card=card; save(); post({t:'card',card});
+  const cardParts=()=>S.card?(S.card.parts||[S.card]):[];
+  const onScreen=ref=>cardParts().some(p=>p.ref===ref);
+  // add: keep what is already on screen and put this below it; otherwise it replaces everything
+  function shareCard(part,add){
+    const parts=add?[...cardParts().filter(p=>p.ref!==part.ref),part]:[part];
+    S.card={parts}; save(); post({t:'card',card:S.card});
     if(!connected()) toast('It will appear when you open the player screen.');
     renderSide();
   }
-  function shareBlocks(t,blocks,whole){
+  function hidePart(ref){const parts=cardParts().filter(p=>p.ref!==ref); if(!parts.length){clearCard(); return} S.card={parts}; save(); post({t:'card',card:S.card}); renderSide()}
+  function shareBlocks(t,blocks,whole,add){
     blocks.forEach(b=>b.shown=true);
-    shareCard({title:t.title||t.key||'',key:t.key||'',ref:whole?t.id:(blocks.length===1?blocks[0].id:t.id),paras:blocks.map(b=>({head:b.head,text:b.text}))});
+    shareCard({title:t.title||t.key||'',key:t.key||'',ref:whole?t.id:(blocks.length===1?blocks[0].id:t.id),paras:blocks.map(b=>({head:b.head,text:b.text}))},add);
   }
   function clearCard(){S.card=null; save(); post({t:'card',card:null}); renderSide()}
   /* ---- selected text: show, split out, merge, move ---- */
@@ -1616,6 +1627,7 @@ function dmApp(){
     selPending={tid:sec.dataset.tsec,text:txt.replace(/\s*\n\s*/g,'\n'),info};
     selBar.querySelector('[data-sa=split]').hidden=!info;
     selBar.querySelector('[data-sa=move]').hidden=!info;
+    selBar.querySelector('[data-sa=add]').hidden=!S.card;
     selBar.querySelector('[data-sa=merge]').hidden=!(info&&info.ei>info.si);
     const rc=r.getBoundingClientRect();
     selBar.hidden=false;
@@ -1680,7 +1692,7 @@ function dmApp(){
     const b=e.target.closest('[data-sa]'); if(!b||!selPending) return;
     const t=textById(selPending.tid), info=selPending.info, act=b.dataset.sa;
     getSelection().removeAllRanges(); selBar.hidden=true;
-    if(act==='share'){shareCard({title:t?(t.title||t.key):'',key:t?t.key||'':'',ref:'sel',paras:selPending.text.split(/\n+/).map(x=>({head:'',text:x}))}); return}
+    if(act==='share'||act==='add'){shareCard({title:t?(t.title||t.key):'',key:t?t.key||'':'',ref:'sel'+Date.now(),paras:selPending.text.split(/\n+/).map(x=>({head:'',text:x}))},act==='add'); return}
     if(!t||!info) return;
     if(act==='split'){snap(); isolate(t,info); save(); renderSide(); toast('Split into its own paragraph. Change its type from the paragraph menu.',3500)}
     else if(act==='merge'){
@@ -2116,7 +2128,8 @@ function dmApp(){
     lastView=vkey;
   }
   function cardBarHTML(){
-    return S.card?`<div class="cardbar"><span>On the player screen: <b>${esc(S.card.title||'Text')}</b></span><button data-act="clearCard" title="Remove the text from the player screen (C)">Remove</button></div>`:'';
+    const ps=cardParts();
+    return ps.length?`<div class="cardbar"><span>On the player screen: <b>${[...new Set(ps.map(p=>p.title||p.key||'Text'))].map(esc).join(', ')}</b></span><button data-act="clearCard" title="Remove all text from the player screen (C)">${ps.length>1?'Remove all':'Remove'}</button></div>`:'';
   }
   function armedHTML(){
     const t=armed&&textById(armed);
@@ -2161,7 +2174,7 @@ function dmApp(){
     const notes=(m.mapTexts||[]).map(textById).filter(Boolean);
     return `<p class="muted" style="font-size:13px;margin:10px 0">Notes for the whole map, like general features or the general notes from an import. Tick one to show it on the player screen.</p>
       <div class="row"><button data-act="newNote">New note</button></div>
-      ${notes.length?`${listHead('Note','On player screen')}<ul class="list">${notes.map(t=>`<li class="item"><button class="row-btn" data-text="${t.id}"><span class="t" style="color:inherit">${esc(t.title||t.key||'Notes')}</span><span class="w">${t.blocks.length} ¶</span></button>${tick('note',t.id,S.card&&S.card.ref===t.id,'Show on the player screen')}</li>`).join('')}</ul>`
+      ${notes.length?`${listHead('Note','On player screen')}<ul class="list">${notes.map(t=>`<li class="item"><button class="row-btn" data-text="${t.id}"><span class="t" style="color:inherit">${esc(t.title||t.key||'Notes')}</span><span class="w">${t.blocks.length} ¶</span></button>${tick('note',t.id,onScreen(t.id),'Show on the player screen')}</li>`).join('')}</ul>`
         :'<p class="muted">No notes for this map yet. Open any text and choose “Attach to the whole map”, or make a new note.</p>'}`;
   }
   function coversListHTML(m){
@@ -2183,7 +2196,7 @@ function dmApp(){
     if(t.dataset.tick==='room'){const a=areaById(m,id); if(a&&isRevealed(m,a.id)!==on) toggleReveal([a]); return}
     if(t.dataset.tick==='cover'){const c=coverById(m,id); if(c){snap(); c.on=on; save(); coversChanged(); dirty=true}}
     if(t.dataset.tick==='tokVis'||t.dataset.tick==='tokName'){const tk=tokById(m,id); if(tk){snap(); if(t.dataset.tick==='tokVis') tk.visible=on; else tk.showName=on; save(); tokensChanged(); dirty=true}}
-    if(t.dataset.tick==='note'){const tx=textById(id); if(tx){if(on) shareBlocks(tx,tx.blocks,true); else clearCard(); return}}
+    if(t.dataset.tick==='note'){const tx=textById(id); if(tx){if(on) shareBlocks(tx,tx.blocks,true,true); else hidePart(tx.id); return}}
     renderSide();
   }
   function textRowsHTML(){
@@ -2216,10 +2229,10 @@ function dmApp(){
     }
     if(!t.blocks.length) return `<p class="muted">No text yet. <button class="link" data-act="editText">Write it</button></p>`;
     return t.blocks.map(b=>{
-      const onScreen=S.card&&S.card.ref===b.id;
-      return `<div class="blk t-${b.type} ${onScreen?'on-screen':''}" data-b="${b.id}">
+      const on=onScreen(b.id), more=S.card&&!on;
+      return `<div class="blk t-${b.type} ${on?'on-screen':''}" data-b="${b.id}">
         <div class="blk-bar"><span class="sw"></span><select data-field="btype" aria-label="Paragraph type">${BLOCK_TYPES.map(([v,l])=>`<option value="${v}" ${b.type===v?'selected':''}>${l}</option>`).join('')}</select>${b.shown?'<span class="shown">Shown</span>':''}<span class="sp"></span>
-        <button class="share" data-act="shareBlock" aria-pressed="${onScreen}">${onScreen?'Hide from players':'Show to players'}</button></div>
+        ${more?'<button class="share" data-act="addBlock" title="Add below what players already see">Add to screen</button>':''}<button class="share" data-act="shareBlock" aria-pressed="${on}" title="${on?'Take only this part off the player screen':'Replace what players see with this'}">${on?'Hide from players':'Show to players'}</button></div>
         <div class="blk-text">${b.head?`<span class="lead">${esc(b.head)}.</span> `:''}${fmt(b.text)}</div></div>`;
     }).join('');
   }
@@ -2227,7 +2240,7 @@ function dmApp(){
     const editing=editText===t.id;
     return `<section class="text-sec" data-tsec="${t.id}">
       <div class="text-sec-head"><span class="k">${esc(t.key)}</span><h3>${esc(t.title||'Untitled text')}</h3>
-      <span class="acts"><button class="link" data-act="shareText">${S.card&&S.card.ref===t.id?'Hide all from players':'Show all'}</button>${editing?'':`<button class="link" data-act="editText">Edit</button>`}${inRoom?`<button class="link" data-act="unlink" title="Unlink this text from the room">Unlink</button>`:''}</span></div>
+      <span class="acts">${S.card&&!onScreen(t.id)?'<button class="link" data-act="addText" title="Add the whole text below what players already see">Add all</button>':''}<button class="link" data-act="shareText">${onScreen(t.id)?'Hide all from players':'Show all'}</button>${editing?'':`<button class="link" data-act="editText">Edit</button>`}${inRoom?`<button class="link" data-act="unlink" title="Unlink this text from the room">Unlink</button>`:''}</span></div>
       ${blocksHTML(t,editing)}</section>`;
   }
   function roomHTML(m,a){
@@ -2319,8 +2332,10 @@ function dmApp(){
       case 'reveal': toggleReveal(selAreas()); break;
       case 'merge': mergeSelected(); break;
       case 'delArea': deleteSelected(); break;
-      case 'shareBlock': if(t&&blk){if(S.card&&S.card.ref===blk.id) clearCard(); else shareBlocks(t,[blk])} break;
-      case 'shareText': if(t){if(S.card&&S.card.ref===t.id) clearCard(); else shareBlocks(t,t.blocks,true)} break;
+      case 'shareBlock': if(t&&blk){if(onScreen(blk.id)) hidePart(blk.id); else shareBlocks(t,[blk])} break;
+      case 'addBlock': if(t&&blk) shareBlocks(t,[blk],false,true); break;
+      case 'shareText': if(t){if(onScreen(t.id)) hidePart(t.id); else shareBlocks(t,t.blocks,true)} break;
+      case 'addText': if(t) shareBlocks(t,t.blocks,true,true); break;
       case 'editText': if(t){editText=t.id; renderSide()} break;
       case 'doneEdit': editText=null; renderSide(); break;
       case 'unlink': if(a&&t){snap(); a.texts=a.texts.filter(x=>x!==t.id); save(); renderSide(); dirty=true} break;
@@ -3055,7 +3070,7 @@ function dmApp(){
   $('#btnHelp').onclick=e=>{setHelp(helpWin.hidden); e.currentTarget.blur()};
   $('#helpClose').onclick=()=>setHelp(false);
   /* ---- player-screen preview: a floating window on the DM view ---- */
-  const SAMPLE_CARD={title:'Sample text',key:'X5',ref:'sample',paras:[{head:'',text:'This is how shown text will look on the player screen. Drag this box to move it and drag its corner to resize it; in side-panel mode, drag it sideways to change the split.'}]};
+  const SAMPLE_CARD={parts:[{title:'Sample text',key:'X5',ref:'sample',paras:[{head:'',text:'This is how shown text will look on the player screen. Drag this box to move it and drag its corner to resize it; in side-panel mode, drag it sideways to change the split.'}]}]};
   const pvWin=$('#pvWin');
   function previewAR(){const p=S.playerScreen; return p?p.w/p.h:16/9}
   function fitPreview(){
